@@ -26,7 +26,7 @@ if (is_readable(__DIR__ . '/vendor/autoload.php')) {
     require_once __DIR__ . '/vendor/autoload.php';
 }
 
-define('PLUGIN_SECURITYINCIDENTS_VERSION', '0.1.0');
+define('PLUGIN_SECURITYINCIDENTS_VERSION', '0.1.1');
 define('PLUGIN_SECURITYINCIDENTS_MIN_GLPI', '11.0.0');
 define('PLUGIN_SECURITYINCIDENTS_MAX_GLPI', '11.99.99');
 define('PLUGIN_SECURITYINCIDENTS_MIN_PHP', '8.2.0');

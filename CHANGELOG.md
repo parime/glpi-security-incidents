@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-09-08
+
 ### Fixed
 
 Found by actually clicking through the plugin end-to-end after the initial build, not by
@@ -63,6 +65,13 @@ inspection — a reminder that "the code compiles and CI is green" is not the sa
   (impact / controls applied / rollback plan), and CVE reference tracking
   (`PluginSecurityincidentsSecurityIncidentCve`, one or more `CVE-YYYY-NNNN` identifiers per
   incident).
+- A Configuration screen (`front/config.php`, wrench icon on **Configuration > Plugins**) showing
+  the installed version next to the latest GitHub release (`GithubVersionChecker`, same mechanism
+  as the sibling plugins), and a repo/CI setup brought up to parity with them: `release.yml`
+  (building and publishing an installable distribution archive — this plugin had none before),
+  `securityincidents.xml` (marketplace catalogue descriptor), `docker-compose.test.yml`, and the
+  standard set of contributor docs (`CONTRIBUTING.md`, `ROADMAP.md`, `SUPPORT.md`,
+  `CODE_OF_CONDUCT.md`, bilingual `README.md`/`README.en.md`).
 
 ### Fixed
 
