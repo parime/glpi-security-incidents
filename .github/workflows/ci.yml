@@ -216,7 +216,7 @@ jobs:
       - name: Valide les fichiers YAML
         run: |
           find . -type f \( -name "*.yml" -o -name "*.yaml" \) -not -path "./vendor/*" -not -path "./node_modules/*" -not -path "./.git/*" \
-            | xargs -I {} sh -c 'echo "Validation de {}" && yamllint -d relaxed {} || exit 1'
+            | xargs -I {} sh -c 'echo "Validation de {}" && yamllint -c .yamllint.yml {} || exit 1'
 
       - name: Installe xmllint
         run: sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends libxml2-utils

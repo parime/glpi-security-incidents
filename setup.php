@@ -44,6 +44,10 @@ function plugin_init_securityincidents(): void {
     ];
 
     $PLUGIN_HOOKS[Hooks::USE_MASSIVE_ACTION]['securityincidents'] = true;
+
+    // Wrench icon on Configuration > Plugins — installed-vs-latest-GitHub-release version check,
+    // same convention as the sibling plugins (Configuration-glpi-auto, glpi-iso27001-management).
+    $PLUGIN_HOOKS[Hooks::CONFIG_PAGE]['securityincidents'] = 'front/config.php';
 }
 
 function plugin_version_securityincidents(): array {

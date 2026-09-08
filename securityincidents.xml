@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+    <name>Security Incidents</name>
+    <key>securityincidents</key>
+    <state>stable</state>
+    <logo>https://raw.githubusercontent.com/parime/glpi-security-incidents/main/logo.png</logo>
+    <description>
+        <short>
+            <fr>Suivi des incidents de sécurité comme un objet ITIL natif de GLPI, indépendant des tickets.</fr>
+            <en>Security incident tracking as a native GLPI ITIL object, independent from tickets.</en>
+        </short>
+        <long>
+            <fr>
+                Security Incidents ajoute un véritable objet ITIL "Incident de sécurité" au menu Assistance de
+                GLPI, aux côtés des Tickets/Problèmes/Changements — pas un type de ticket, pas une catégorie, un
+                objet autonome avec ses propres acteurs (demandeurs, observateurs, assignés), son propre workflow
+                de statuts, ses propres tâches, ses propres notifications et sa propre gestion des droits.
+
+                Un incident de sécurité a un cycle de vie différent d'un ticket de support classique : il
+                nécessite une analyse (impact, mesures appliquées, plan de retour arrière/confinement) et souvent
+                une ou plusieurs références CVE associées. Le plugin ajoute ces deux éléments nativement : un
+                onglet "Analyse" dédié, et une liste de références CVE (format CVE-AAAA-NNNN validé) directement
+                sur la fiche de l'incident.
+
+                Ce plugin est délibérément indépendant de tout mécanisme de ticket générique : créer un incident
+                de sécurité ne crée jamais de Ticket sous le capot, et filtrer les tickets par catégorie
+                "sécurité" n'est pas une alternative équivalente — les deux approches ont été comparées en
+                conditions réelles, et seule celle-ci offre un vrai registre d'incidents traçable indépendamment
+                de la file de support courante.
+            </fr>
+            <en>
+                Security Incidents adds a real "Security Incident" ITIL object to GLPI's Assistance menu,
+                alongside Tickets/Problems/Changes — not a ticket type, not a category, a standalone object with
+                its own actors (requesters, observers, assignees), its own status workflow, its own tasks, its
+                own notifications and its own rights management.
+
+                A security incident has a different lifecycle from a regular support ticket: it needs an
+                analysis (impact, controls applied, rollback/containment plan) and often one or more associated
+                CVE references. The plugin adds both natively: a dedicated "Analysis" tab, and a CVE reference
+                list (validated CVE-YYYY-NNNN format) directly on the incident record.
+
+                This plugin is deliberately independent from any generic ticket mechanism: creating a security
+                incident never creates a Ticket under the hood, and filtering tickets by a "security" category is
+                not an equivalent alternative — both approaches were compared in real conditions, and only this
+                one provides a genuine, independently trackable incident register rather than an entry buried in
+                the regular support queue.
+            </en>
+        </long>
+    </description>
+    <homepage>https://github.com/parime/glpi-security-incidents</homepage>
+    <download>https://github.com/parime/glpi-security-incidents/releases</download>
+    <issues>https://github.com/parime/glpi-security-incidents/issues</issues>
+    <readme>https://raw.githubusercontent.com/parime/glpi-security-incidents/main/README.md</readme>
+    <changelog>https://github.com/parime/glpi-security-incidents/releases</changelog>
+    <authors>
+        <author>Vincent GUILLOTTE</author>
+    </authors>
+    <versions>
+    </versions>
+    <langs>
+        <lang>fr_FR</lang>
+        <lang>en_GB</lang>
+        <lang>de_DE</lang>
+        <lang>it_IT</lang>
+        <lang>es_ES</lang>
+    </langs>
+    <license>GPL v3+</license>
+    <tags>
+        <fr>
+            <tag>sécurité</tag>
+            <tag>incident</tag>
+            <tag>CVE</tag>
+            <tag>GLPI</tag>
+            <tag>ITIL</tag>
+        </fr>
+        <en>
+            <tag>security</tag>
+            <tag>incident</tag>
+            <tag>CVE</tag>
+            <tag>GLPI</tag>
+            <tag>ITIL</tag>
+        </en>
+    </tags>
+</root>

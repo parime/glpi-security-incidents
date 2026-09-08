@@ -1,0 +1,81 @@
+#
+# -------------------------------------------------------------------------
+# Security Incidents plugin for GLPI
+# Copyright (C) 2026 Vincent GUILLOTTE
+# https://github.com/parime/glpi-security-incidents
+# -------------------------------------------------------------------------
+# LICENSE
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version. See LICENSE for the full text.
+# -------------------------------------------------------------------------
+#
+
+# Local/test-only stack: GLPI + MariaDB with this plugin mounted in.
+#
+# Usage:
+#   composer install --no-dev   # vendor/autoload.php is a hard runtime requirement, see setup.php
+#   docker compose -f docker-compose.test.yml up -d
+#   # first boot downloads GLPI itself into the glpi_data volume — wait for it to be reachable:
+#   #   curl -o /dev/null -sw '%{http_code}\n' http://localhost:8093/
+#   docker compose -f docker-compose.test.yml exec glpi \
+#     php bin/console database:configure --allow-superuser -n --db-host=db --db-name=glpi --db-user=glpi --db-password=glpi
+#   docker compose -f docker-compose.test.yml exec glpi \
+#     php bin/console database:install --allow-superuser -n --default-language=fr_FR
+#   docker compose -f docker-compose.test.yml exec glpi \
+#     php bin/console plugin:install securityincidents --allow-superuser -n
+#   docker compose -f docker-compose.test.yml exec glpi \
+#     php bin/console plugin:activate securityincidents --allow-superuser -n
+#   # then open http://localhost:8093
+#
+# `bin/console` runs as root by default in this image (a WARNING is printed each time). Apache
+# runs as www-data — root-run commands create cache/log files under files/ owned by root that
+# www-data can't write to afterwards, which surfaces as a generic 500 on every page with an empty
+# Apache error log (the real error only shows up in a CLI run with display_errors=1). If that
+# happens, run: docker compose -f docker-compose.test.yml exec glpi chown -R www-data:www-data
+# /var/www/html/glpi/files
+#
+# GLPI caches compiled Twig templates AND compiled translation catalogues under files/_cache —
+# edits to any .html.twig file, or to any locales/*.po (once recompiled to .mo with msgfmt), are
+# NOT picked up automatically against this image. After changing either, clear both caches
+# (confirmed live: clearing only the Twig cache is not enough for a translation fix to take
+# effect — a stale compiled catalogue keeps serving the old lookup):
+#   docker compose -f docker-compose.test.yml exec glpi \
+#     find /var/www/html/glpi/files/_cache -mindepth 1 -delete
+
+services:
+  db:
+    image: mariadb:11
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: glpi
+      MARIADB_DATABASE: glpi
+      MARIADB_USER: glpi
+      MARIADB_PASSWORD: glpi
+    volumes:
+      - glpi_db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  glpi:
+    image: diouxx/glpi:latest
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8093:80"
+    environment:
+      TIMEZONE: Europe/Paris
+    volumes:
+      - glpi_data:/var/www/html/glpi
+      - ./:/var/www/html/glpi/plugins/securityincidents:ro
+
+volumes:
+  glpi_db_data:
+  glpi_data:

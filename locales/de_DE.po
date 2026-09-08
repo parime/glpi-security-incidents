@@ -69,3 +69,18 @@ msgstr "Sicherheitsvorfall gelöst"
 
 msgid "Security incident closed"
 msgstr "Sicherheitsvorfall geschlossen"
+
+msgid "Plugin version"
+msgstr "Plugin-Version"
+
+msgid "Installed version"
+msgstr "Installierte Version"
+
+msgid "Latest version on GitHub"
+msgstr "Neueste Version auf GitHub"
+
+msgid "New / updated / solved / closed notifications are pre-configured at install. Customize recipients and templates from"
+msgstr "Benachrichtigungen für Neu / Aktualisiert / Gelöst / Geschlossen sind bei der Installation vorkonfiguriert. Empfänger und Vorlagen anpassen unter"
+
+msgid "Setup > Notifications"
+msgstr "Konfiguration > Benachrichtigungen"

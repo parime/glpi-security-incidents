@@ -1,0 +1,188 @@
+name: Release
+
+# Triggers on a version tag (vX.Y.Z): installs production dependencies, builds the plugin's
+# distribution archive, verifies it actually installs on a fresh GLPI instance, then publishes
+# the GitHub Release with that archive attached and auto-generated notes. Modeled on the release
+# workflow already validated on the sibling Configuration-glpi-auto plugin.
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  # Lets auto-tag.yml explicitly trigger this release after tagging: a tag pushed with the
+  # GITHUB_TOKEN (as auto-tag.yml does) does NOT trigger other workflows by default (GitHub
+  # Actions anti-recursion protection) — only an explicit workflow_dispatch (called with --ref on
+  # that same tag, see auto-tag.yml) works around this. github.ref_name is then the target tag,
+  # same as for a normal push.
+  workflow_dispatch:
+
+env:
+  GLPI_IMAGE: glpi/glpi:11.0.8
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7 (SHA pinned, cf. Semgrep github-actions-mutable-action-tag)
+
+      - name: Verify the tag matches PLUGIN_SECURITYINCIDENTS_VERSION
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          CODE_VERSION="$(grep -oP "define\('PLUGIN_SECURITYINCIDENTS_VERSION', '\K[^']+" setup.php)"
+          echo "Tag: $TAG_VERSION -- setup.php: $CODE_VERSION"
+          if [ "$TAG_VERSION" != "$CODE_VERSION" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match PLUGIN_SECURITYINCIDENTS_VERSION ($CODE_VERSION) in setup.php."
+            exit 1
+          fi
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2 (SHA pinned, cf. Semgrep github-actions-mutable-action-tag)
+        with:
+          php-version: "8.2"
+          coverage: none
+
+      - name: Install production dependencies
+        # No runtime packages (composer.json's require is just "php") — this still matters: it
+        # generates vendor/autoload.php, which setup.php requires to autoload the PSR-4 src/
+        # classes (Install\Installer, Profile, Parameters\SecurityIncidentParameters). Without it
+        # a release archive built from a plain `git archive` would activate but fatal immediately.
+        run: composer install --no-dev --no-progress --prefer-dist --optimize-autoloader
+
+      - name: Build the distribution archive
+        # git archive (not a plain zip of the checkout): built exactly from what's committed at
+        # the tag, automatically excluding anything marked export-ignore in .gitattributes
+        # (tests/, .github/, CI/quality config...). vendor/ isn't versioned (see .gitignore) so
+        # git archive can't include it — copied explicitly from the production install above.
+        # securityincidents/ prefix: the archive must extract directly under plugins/ on a GLPI
+        # instance, and that directory name is what GLPI derives the plugin key from.
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          ARCHIVE_NAME="glpi-security-incidents-${VERSION}.zip"
+          echo "ARCHIVE_NAME=${ARCHIVE_NAME}" >> "$GITHUB_ENV"
+
+          mkdir -p /tmp/staging/securityincidents
+          git archive "$GITHUB_REF_NAME" | tar -x -C /tmp/staging/securityincidents
+          cp -r vendor /tmp/staging/securityincidents/vendor
+
+          (cd /tmp/staging && zip -qr "$GITHUB_WORKSPACE/${ARCHIVE_NAME}" securityincidents)
+
+      - name: Start MariaDB
+        run: |
+          docker network create si-ci
+          docker run -d --name mariadb --network si-ci \
+            -e MARIADB_ROOT_PASSWORD=glpi_password \
+            -e MARIADB_DATABASE=glpidb \
+            -e MARIADB_USER=glpi_user \
+            -e MARIADB_PASSWORD=glpi_password \
+            mariadb:11
+
+          echo "Waiting for MariaDB to accept connections..."
+          for i in $(seq 1 30); do
+            docker exec mariadb mariadb-admin ping -h 127.0.0.1 -u root -pglpi_password --silent && break
+            sleep 2
+          done
+
+      - name: Start GLPI (auto-install via the official image)
+        run: |
+          docker run -d --name glpi --network si-ci \
+            -e TIMEZONE=Europe/Paris \
+            -e GLPI_DB_HOST=mariadb \
+            -e GLPI_DB_PORT=3306 \
+            -e GLPI_DB_NAME=glpidb \
+            -e GLPI_DB_USER=glpi_user \
+            -e GLPI_DB_PASSWORD=glpi_password \
+            "$GLPI_IMAGE"
+
+          echo "Waiting for GLPI auto-install to finish..."
+          ready=0
+          for i in $(seq 1 60); do
+            docker exec glpi test -f /var/glpi/config/config_db.php && { ready=1; break; }
+            sleep 5
+          done
+          if [ "$ready" != "1" ]; then
+            echo "::error::GLPI auto-install never finished (config_db.php missing)."
+            docker logs glpi --tail 200
+            exit 1
+          fi
+
+      - name: Validate the archive on a real GLPI instance
+        run: |
+          mkdir -p /tmp/archive-extracted
+          unzip -q "$ARCHIVE_NAME" -d /tmp/archive-extracted
+          docker cp /tmp/archive-extracted/securityincidents glpi:/var/www/glpi/plugins/securityincidents
+          docker exec -u root glpi chown -R www-data:www-data /var/www/glpi/plugins/securityincidents
+
+          ready=0
+          for i in $(seq 1 12); do
+            if docker exec glpi php bin/console database:update --force --no-interaction; then
+              ready=1
+              break
+            fi
+            sleep 5
+          done
+          if [ "$ready" != "1" ]; then
+            echo "::error::database:update failed after 12 attempts."
+            exit 1
+          fi
+          docker exec glpi php bin/console plugin:install securityincidents --force --no-interaction
+          docker exec glpi php bin/console plugin:activate securityincidents --no-interaction
+
+      - name: GLPI logs (on failure)
+        if: failure()
+        run: docker logs glpi --tail 200
+
+      - name: Publish the GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # gh release create fails outright if a release already exists for this tag (e.g. one
+          # created manually through the GitHub UI before this workflow ran). Falling back to
+          # upload/edit keeps this step idempotent instead of leaving the tag stuck without a zip.
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" "$ARCHIVE_NAME" --clobber
+            gh release edit "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --generate-notes
+          else
+            gh release create "$GITHUB_REF_NAME" "$ARCHIVE_NAME" \
+              --title "$GITHUB_REF_NAME" \
+              --generate-notes
+          fi
+
+      - name: Open a PR updating the marketplace catalogue
+        # Same automation as Configuration-glpi-auto's own release.yml, for the same reason: a
+        # marketplace listing that nothing keeps in sync with new releases silently drifts (issue
+        # #105 on assetsign-glpi). Opens a ready-to-merge PR on every release instead.
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          python3 .github/scripts/update_marketplace_xml.py \
+            securityincidents.xml "$VERSION" "=11.0.0" \
+            "https://github.com/parime/glpi-security-incidents/releases/download/${GITHUB_REF_NAME}/${ARCHIVE_NAME}" \
+            "        " "            "
+
+          if git diff --quiet -- securityincidents.xml; then
+            echo "Catalogue already up to date, nothing to do."
+            exit 0
+          fi
+
+          BRANCH="chore/marketplace-xml-${VERSION}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          git add securityincidents.xml
+          git commit -m "chore: add version ${VERSION} to the marketplace catalogue"
+          git push origin "$BRANCH"
+
+          gh pr create --title "chore: add version ${VERSION} to the marketplace catalogue" \
+            --body "Automatic update after release ${GITHUB_REF_NAME}. Merge once CI is green." \
+            --base main --head "$BRANCH"
+
+          # A PR/push made with the default GITHUB_TOKEN does not trigger pull_request workflows
+          # (GitHub Actions anti-recursion guard — same limitation documented in auto-tag.yml for
+          # this workflow itself) — explicitly re-trigger CI so the PR's required check runs
+          # instead of sitting pending forever.
+          gh workflow run ci.yml --ref "$BRANCH"
