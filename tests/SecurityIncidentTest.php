@@ -122,6 +122,13 @@ final class SecurityIncidentTest extends SecurityIncidentsTestCase
    public function testCreatingAnIncidentQueuesANewNotification(): void {
        global $DB;
 
+        // A notification never fires with GLPI's own `use_notifications` core setting off — not
+        // this plugin's to control, but not something this test can assume ambient either (a
+        // freshly auto-installed GLPI instance, like the one this suite runs against in CI, does
+        // not enable it by default). Explicitly turning it on is the correct precondition, same
+        // as an admin would do once before relying on any notification at all.
+        \Config::setConfigurationValues('core', ['use_notifications' => 1]);
+
        $entityId = $this->createTestEntity(0, 'PHPUnit Notification Entity');
        $countBefore = $DB->request(['FROM' => 'glpi_queuednotifications'])->count();
 
@@ -139,6 +146,8 @@ final class SecurityIncidentTest extends SecurityIncidentsTestCase
 
    public function testSolvingAnIncidentQueuesASolvedNotification(): void {
        global $DB;
+
+        \Config::setConfigurationValues('core', ['use_notifications' => 1]);
 
        $entityId = $this->createTestEntity(0, 'PHPUnit Solved Notification Entity');
        $incident = new PluginSecurityincidentsSecurityIncident();
