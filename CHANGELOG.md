@@ -53,7 +53,13 @@ found earlier in the same investigation):
   no email ever queued. One shared template for all four events plus their `Notification`/
   `NotificationTarget` rows are now seeded at install (target `items_id`/`type` values copied
   verbatim from a real GLPI 11 install's own native `Change` notification rows — confirmed the two
-  numbering schemes involved are easy to confuse and only one is correct).
+  numbering schemes involved are easy to confuse and only one is correct). Firing a notification
+  for real also requires two GLPI core settings together (`use_notifications` *and*
+  `notifications_mailing` — either one alone still queues nothing) and a real requester actor with
+  a real email address on the "AUTHOR" notification target — none of this is this plugin's own
+  responsibility to configure, but the test suite explicitly sets all three up itself rather than
+  assume them, since a freshly auto-installed GLPI instance (confirmed live in this project's own
+  CI, on a from-scratch `glpi/glpi:11.0.8` container) has neither on by default.
 - **`ALLSTANDARDRIGHT` alone is not enough for an ITIL object's Super-Admin grant.**
   `PluginSecurityincidentsSecurityIncident::getRights()` adds `self::READALL` (bit 1024, distinct
   from the base `READ`/`READMY` bit it replaces) — granting only `ALLSTANDARDRIGHT` (31) at install
