@@ -13,5 +13,5 @@ parameters:
         - .phpstan-bootstrap.php
     ignoreErrors:
         -
-            message: '#Class PluginSecurityincidents\w+ not found#'
+            identifier: class.notFound
             path: src/GlpiPlugin/Securityincidents/Parameters/SecurityIncidentParameters.php

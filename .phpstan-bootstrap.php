@@ -16,6 +16,12 @@ if (!defined('GLPI_PLUGIN_DOC_DIR')) {
     define('GLPI_PLUGIN_DOC_DIR', '/tmp/glpi-phpstan-plugin-doc');
 }
 
+// setup.php's own version constant, used by Install\Installer — not loaded here (this bootstrap
+// deliberately doesn't require setup.php itself, only GLPI core's autoload below).
+if (!defined('PLUGIN_SECURITYINCIDENTS_VERSION')) {
+    define('PLUGIN_SECURITYINCIDENTS_VERSION', '0.0.0');
+}
+
 foreach (['/var/www/glpi/vendor/autoload.php', '/var/www/html/glpi/vendor/autoload.php'] as $glpiAutoload) {
     if (is_file($glpiAutoload)) {
         require_once $glpiAutoload;

@@ -27,6 +27,12 @@ msgstr "Attività dell'incidente di sicurezza"
 msgid "Security incident tasks"
 msgstr "Attività dell'incidente di sicurezza"
 
+msgid "Security incident template"
+msgstr "Modello di incidente di sicurezza"
+
+msgid "Security incident templates"
+msgstr "Modelli di incidente di sicurezza"
+
 msgid "CVE reference"
 msgstr "Riferimento CVE"
 

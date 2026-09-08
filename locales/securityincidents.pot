@@ -26,6 +26,12 @@ msgstr ""
 msgid "Security incident tasks"
 msgstr ""
 
+msgid "Security incident template"
+msgstr ""
+
+msgid "Security incident templates"
+msgstr ""
+
 msgid "CVE reference"
 msgstr ""
 

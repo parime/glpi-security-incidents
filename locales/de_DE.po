@@ -27,6 +27,12 @@ msgstr "Sicherheitsvorfall-Aufgabe"
 msgid "Security incident tasks"
 msgstr "Sicherheitsvorfall-Aufgaben"
 
+msgid "Security incident template"
+msgstr "Sicherheitsvorfall-Vorlage"
+
+msgid "Security incident templates"
+msgstr "Sicherheitsvorfall-Vorlagen"
+
 msgid "CVE reference"
 msgstr "CVE-Referenz"
 
