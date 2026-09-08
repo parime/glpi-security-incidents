@@ -1,0 +1,25 @@
+name: Feature request
+description: Proposer une nouvelle fonctionnalité ou une évolution
+labels: ["enhancement", "triage"]
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: Besoin
+      description: Quel problème concret cette fonctionnalité résout-elle ?
+    validations:
+      required: true
+
+  - type: textarea
+    id: justification
+    attributes:
+      label: Justification
+      description: Pourquoi est-ce important ? Pour quel type d'utilisateur (technicien, RSSI...) ?
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact envisagé
+      description: Impact sur l'architecture, les droits ou la performance si vous en avez une idée.

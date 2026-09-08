@@ -1,0 +1,254 @@
+name: CI
+
+# Same shape as the sibling plugins by this author (assetsign-glpi, Configuration-glpi-auto): real
+# GLPI + MariaDB via the official glpi/glpi image, lint, static analysis, coding standard, real
+# install/activate, then PHPUnit.
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+  schedule:
+    - cron: '23 3 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  GLPI_IMAGE: glpi/glpi:11.0.8
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupère le code du plugin
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7 (SHA pinned, cf. Semgrep gha-mutable-action-tag)
+
+      - name: Analyse de sécurité du dépôt (Trivy — secrets, mauvaises configurations et vulnérabilités)
+        run: |
+          VERSION="$(curl -sfL https://api.github.com/repos/aquasecurity/trivy/releases/latest | grep -m1 '"tag_name"' | sed -E 's/.*"v([^"]+)".*/\1/')"
+          curl -sfLO "https://github.com/aquasecurity/trivy/releases/download/v${VERSION}/trivy_${VERSION}_Linux-64bit.tar.gz"
+          curl -sfLO "https://github.com/aquasecurity/trivy/releases/download/v${VERSION}/trivy_${VERSION}_checksums.txt"
+          sha256sum --ignore-missing -c "trivy_${VERSION}_checksums.txt"
+          tar xzf "trivy_${VERSION}_Linux-64bit.tar.gz" trivy
+          install -m 0755 trivy /usr/local/bin/trivy
+          trivy fs --scanners vuln,secret,misconfig --exit-code 1 .
+
+      - name: Valide composer.json/composer.lock
+        run: |
+          php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+          php composer-setup.php --install-dir=/tmp --filename=composer.phar
+          php /tmp/composer.phar validate
+
+      - name: Démarre MariaDB
+        run: |
+          docker network create securityincidents-ci
+          docker run -d --name mariadb --network securityincidents-ci \
+            -e MARIADB_ROOT_PASSWORD=glpi_password \
+            -e MARIADB_DATABASE=glpidb \
+            -e MARIADB_USER=glpi_user \
+            -e MARIADB_PASSWORD=glpi_password \
+            mariadb:11
+
+          echo "Attente que MariaDB accepte les connexions..."
+          for i in $(seq 1 30); do
+            docker exec mariadb mariadb-admin ping -h 127.0.0.1 -u root -pglpi_password --silent && break
+            sleep 2
+          done
+
+      - name: Démarre GLPI (auto-installation via l'image officielle)
+        run: |
+          docker run -d --name glpi --network securityincidents-ci \
+            -e TIMEZONE=Europe/Paris \
+            -e GLPI_DB_HOST=mariadb \
+            -e GLPI_DB_PORT=3306 \
+            -e GLPI_DB_NAME=glpidb \
+            -e GLPI_DB_USER=glpi_user \
+            -e GLPI_DB_PASSWORD=glpi_password \
+            "$GLPI_IMAGE"
+
+          echo "Attente que l'auto-installation de GLPI soit terminee..."
+          ready=0
+          for i in $(seq 1 60); do
+            docker exec glpi test -f /var/glpi/config/config_db.php && { ready=1; break; }
+            sleep 5
+          done
+          if [ "$ready" != "1" ]; then
+            echo "::error::GLPI n'a jamais termine son auto-installation (config_db.php absent)."
+            docker logs glpi --tail 200
+            exit 1
+          fi
+
+      - name: Copie le plugin dans le conteneur GLPI
+        run: |
+          docker exec glpi mkdir -p /var/www/glpi/plugins/securityincidents
+          docker cp ./. glpi:/var/www/glpi/plugins/securityincidents
+          docker exec -u root glpi chown -R www-data:www-data /var/www/glpi/plugins/securityincidents
+
+      - name: Lint PHP
+        run: |
+          docker exec glpi sh -c '
+            cd /var/www/glpi/plugins/securityincidents
+            fail=0
+            for f in $(find src inc front -name "*.php"); do
+              php -l "$f" > /tmp/lintout 2>&1 || { cat /tmp/lintout; fail=1; }
+            done
+            exit $fail
+          '
+
+      - name: Installe les dépendances de dev du plugin (PHPUnit)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          docker exec glpi sh -c '
+            export COMPOSER_HOME=/tmp/composer-home
+            mkdir -p "$COMPOSER_HOME"
+            cd /tmp
+            php -r "copy(\"https://getcomposer.org/installer\", \"composer-setup.php\");"
+            php composer-setup.php --install-dir=/tmp --filename=composer.phar
+          '
+          docker exec -e COMPOSER_AUTH="{\"github-oauth\":{\"github.com\":\"$GH_TOKEN\"}}" glpi sh -c '
+            export COMPOSER_HOME=/tmp/composer-home
+            cd /var/www/glpi/plugins/securityincidents
+            php /tmp/composer.phar install --no-interaction --prefer-dist
+          '
+
+      - name: Analyse statique du code (PHPStan)
+        run: docker exec glpi sh -c "cd /var/www/glpi/plugins/securityincidents && vendor/bin/phpstan analyse --no-progress --memory-limit=512M"
+
+      - name: Vérifie le standard de codage officiel GLPI
+        run: docker exec glpi sh -c "cd /var/www/glpi/plugins/securityincidents && vendor/bin/phpcs --standard=vendor/glpi-project/coding-standard/GlpiStandard/ruleset.xml src inc front hook.php setup.php"
+
+      - name: Audit de sécurité des dépendances Composer
+        run: |
+          for i in 1 2 3; do
+            docker exec glpi sh -c "cd /var/www/glpi/plugins/securityincidents && export COMPOSER_HOME=/tmp/composer-home && php /tmp/composer.phar audit --no-dev" && exit 0
+            echo "composer audit a echoue (tentative $i/3), nouvel essai dans 15s..."
+            sleep 15
+          done
+          docker exec glpi sh -c "cd /var/www/glpi/plugins/securityincidents && export COMPOSER_HOME=/tmp/composer-home && php /tmp/composer.phar audit --no-dev"
+
+      - name: Installe et active le plugin
+        run: |
+          ready=0
+          for i in $(seq 1 12); do
+            if docker exec glpi php bin/console database:update --force --no-interaction; then
+              ready=1
+              break
+            fi
+            echo "database:update pas encore pret (tentative $i/12), nouvel essai dans 5s..."
+            sleep 5
+          done
+          if [ "$ready" != "1" ]; then
+            echo "::error::database:update a echoue apres 12 tentatives."
+            exit 1
+          fi
+          docker exec glpi php bin/console plugin:install securityincidents --force --no-interaction
+          docker exec glpi php bin/console plugin:activate securityincidents --no-interaction
+
+      - name: Vérifie que la désinstallation ne laisse aucun résidu
+        run: |
+          docker exec glpi php bin/console plugin:deactivate securityincidents --no-interaction
+          docker exec glpi php bin/console plugin:uninstall securityincidents --no-interaction
+          leftover=$(docker exec glpi mariadb -h mariadb -u glpi_user -pglpi_password glpidb -N -e "SHOW TABLES LIKE 'glpi_plugin_securityincidents_%'" | wc -l)
+          if [ "$leftover" != "0" ]; then
+            echo "::error::$leftover table(s) residuelle(s) apres desinstallation."
+            exit 1
+          fi
+          leftover_rights=$(docker exec glpi mariadb -h mariadb -u glpi_user -pglpi_password glpidb -N -e "SELECT COUNT(*) FROM glpi_profilerights WHERE name LIKE 'plugin_securityincidents_%'")
+          if [ "$leftover_rights" != "0" ]; then
+            echo "::error::$leftover_rights droit(s) residuel(s) apres desinstallation."
+            exit 1
+          fi
+          docker exec glpi php bin/console plugin:install securityincidents --force --no-interaction
+          docker exec glpi php bin/console plugin:activate securityincidents --no-interaction
+
+      - name: Installe pcov (couverture de code)
+        run: docker exec -u root glpi sh -c "pecl install pcov"
+
+      - name: Lance PHPUnit (avec couverture)
+        run: docker exec glpi sh -c "cd /var/www/glpi/plugins/securityincidents && php -d extension=pcov.so -d memory_limit=512M vendor/bin/phpunit --coverage-text"
+
+      - name: Logs GLPI (en cas d'échec)
+        if: failure()
+        run: docker logs glpi --tail 200
+
+  semgrep:
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep
+    steps:
+      - name: Récupère le code du plugin
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7 (SHA pinned, cf. Semgrep gha-mutable-action-tag)
+      - run: semgrep ci --config auto
+        env:
+          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+
+  validation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupère le code du plugin
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7 (SHA pinned, cf. Semgrep gha-mutable-action-tag)
+
+      - name: Valide les fichiers JSON
+        run: |
+          find . -type f -name "*.json" -not -path "./vendor/*" -not -path "./node_modules/*" -not -path "./.git/*" \
+            | xargs -I {} sh -c 'echo "Validation de {}" && jq empty {} || exit 1'
+
+      - name: Installe yamllint
+        run: pip install --quiet yamllint
+
+      - name: Valide les fichiers YAML
+        run: |
+          find . -type f \( -name "*.yml" -o -name "*.yaml" \) -not -path "./vendor/*" -not -path "./node_modules/*" -not -path "./.git/*" \
+            | xargs -I {} sh -c 'echo "Validation de {}" && yamllint -d relaxed {} || exit 1'
+
+      - name: Installe xmllint
+        run: sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends libxml2-utils
+
+      - name: Valide les fichiers XML
+        run: |
+          find . -type f -name "*.xml*" -not -path "./vendor/*" -not -path "./node_modules/*" -not -path "./.git/*" \
+            | xargs -I {} sh -c 'echo "Validation de {}" && xmllint --noout {} || exit 1'
+
+  locales:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupère le code du plugin
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7 (SHA pinned, cf. Semgrep gha-mutable-action-tag)
+
+      - name: Installe composer
+        run: |
+          php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+          php composer-setup.php --install-dir=/tmp --filename=composer.phar
+
+      - name: Installe les dépendances (dont l'outil d'extraction glpi-project/tools)
+        env:
+          COMPOSER_AUTH: '{"github-oauth":{"github.com":"${{ github.token }}"}}'
+        run: php /tmp/composer.phar install --no-interaction --prefer-dist
+
+      - name: Installe gettext
+        run: sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends gettext
+
+      - name: Régénère le .pot à partir du code actuel
+        run: |
+          vendor/bin/extract-locales
+          git checkout -- locales/en_GB.po
+
+      - name: Vérifie que chaque langue traduit chaque chaîne extraite
+        run: |
+          status=0
+          for lang in fr_FR en_GB de_DE es_ES it_IT; do
+            msgmerge --no-fuzzy-matching --quiet -o /tmp/merged_${lang}.po locales/${lang}.po locales/securityincidents.pot
+            missing=$(msgattrib --untranslated /tmp/merged_${lang}.po | grep -c '^msgid "[^"]' || true)
+            if [ "$missing" -gt 0 ]; then
+              echo "::error::${lang}.po est incomplet : ${missing} chaîne(s) du code sans traduction"
+              msgattrib --untranslated /tmp/merged_${lang}.po | grep '^msgid "[^"]'
+              status=1
+            fi
+          done
+          exit $status

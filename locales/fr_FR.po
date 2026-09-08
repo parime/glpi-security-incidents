@@ -1,0 +1,70 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: glpi-security-incidents\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: fr_FR\n"
+
+msgid "Security incident"
+msgstr "Incident de sécurité"
+
+msgid "Security incidents"
+msgstr "Incidents de sécurité"
+
+msgid "Analysis"
+msgstr "Analyse"
+
+msgid "Security incident item"
+msgstr "Élément d'incident de sécurité"
+
+msgid "Security incident items"
+msgstr "Éléments d'incident de sécurité"
+
+msgid "Security incident task"
+msgstr "Tâche d'incident de sécurité"
+
+msgid "Security incident tasks"
+msgstr "Tâches d'incident de sécurité"
+
+msgid "CVE reference"
+msgstr "Référence CVE"
+
+msgid "CVE references"
+msgstr "Références CVE"
+
+msgid "CVE"
+msgstr "CVE"
+
+msgid "CVEs"
+msgstr "CVE"
+
+msgid "CVE identifier"
+msgstr "Identifiant CVE"
+
+msgid "No CVE reference associated with this incident yet."
+msgstr "Aucune référence CVE associée à cet incident pour le moment."
+
+msgid "\"%s\" is not a valid CVE identifier (expected format: CVE-YYYY-NNNN)."
+msgstr "« %s » n'est pas un identifiant CVE valide (format attendu : CVE-AAAA-NNNN)."
+
+msgid "Impact"
+msgstr "Impact"
+
+msgid "Controls applied / to apply"
+msgstr "Mesures appliquées / à appliquer"
+
+msgid "Rollback / containment plan"
+msgstr "Plan de retour arrière / confinement"
+
+msgid "New security incident"
+msgstr "Nouvel incident de sécurité"
+
+msgid "Update of a security incident"
+msgstr "Mise à jour d'un incident de sécurité"
+
+msgid "Security incident solved"
+msgstr "Incident de sécurité résolu"
+
+msgid "Security incident closed"
+msgstr "Incident de sécurité clôturé"

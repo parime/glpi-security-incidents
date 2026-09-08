@@ -1,0 +1,17 @@
+parameters:
+    level: 5
+    # Scoped to src/ only (Install\Installer, Profile, Parameters\SecurityIncidentParameters) —
+    # every ITIL-related class lives in inc/ under the legacy global-namespace convention (see
+    # PluginSecurityincidentsSecurityIncident's own docblock for why), loaded only by GLPI's own
+    # plugin-specific runtime autoloader once a plugin is active. This bootstrap only loads GLPI
+    # core's composer autoload (no DB, no Kernel boot, no active-plugin awareness), so referencing
+    # an inc/ class from here would be a guaranteed, unfixable "class not found" false positive —
+    # excluded rather than fought with ignoreErrors across every call site.
+    paths:
+        - src
+    bootstrapFiles:
+        - .phpstan-bootstrap.php
+    ignoreErrors:
+        -
+            message: '#Class PluginSecurityincidents\w+ not found#'
+            path: src/GlpiPlugin/Securityincidents/Parameters/SecurityIncidentParameters.php

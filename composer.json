@@ -1,0 +1,43 @@
+{
+    "name": "parime/glpi-security-incidents",
+    "description": "Security incident tracking as a native GLPI ITIL object (Assistance menu), with CVE association.",
+    "type": "glpi-plugin",
+    "license": "GPL-3.0-or-later",
+    "authors": [
+        {
+            "name": "Vincent GUILLOTTE",
+            "homepage": "https://github.com/parime"
+        }
+    ],
+    "homepage": "https://github.com/parime/glpi-security-incidents",
+    "support": {
+        "issues": "https://github.com/parime/glpi-security-incidents/issues",
+        "source": "https://github.com/parime/glpi-security-incidents"
+    },
+    "require": {
+        "php": ">=8.2"
+    },
+    "require-dev": {
+        "glpi-project/coding-standard": "^0.9.0",
+        "glpi-project/tools": "^0.8",
+        "phpstan/phpstan": "^2.0",
+        "phpunit/phpunit": "^11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "GlpiPlugin\\Securityincidents\\": "src/GlpiPlugin/Securityincidents/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "GlpiPlugin\\Securityincidents\\Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true,
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
+    }
+}
