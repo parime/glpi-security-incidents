@@ -129,7 +129,7 @@ final class SecurityIncidentTest extends SecurityIncidentsTestCase
         // notification target to resolve to zero real recipients and queue nothing):
         // `use_notifications` on, and a real requester actor with a real email address (the
         // "AUTHOR"/items_id=3 target this plugin's own seeded rows rely on).
-        \Config::setConfigurationValues('core', ['use_notifications' => 1]);
+        \Config::setConfigurationValues('core', ['use_notifications' => 1, 'notifications_mailing' => 1]);
         $requesterId = $this->createTestUser('Notif', 'Requester', ['_useremails' => ['notif.requester@example.test']]);
 
        $entityId = $this->createTestEntity(0, 'PHPUnit Notification Entity');
@@ -145,7 +145,22 @@ final class SecurityIncidentTest extends SecurityIncidentsTestCase
        $this->assertGreaterThan(0, $id);
 
        $countAfter = $DB->request(['FROM' => 'glpi_queuednotifications'])->count();
-       $this->assertGreaterThan($countBefore, $countAfter, 'Creating an incident must queue at least one notification.');
+      if ($countAfter <= $countBefore) {
+          global $CFG_GLPI;
+          $notif = $DB->request(['FROM' => 'glpi_notifications', 'WHERE' => ['itemtype' => PluginSecurityincidentsSecurityIncident::class, 'event' => 'new']])->current();
+          $targetCount = $notif ? $DB->request(['FROM' => 'glpi_notificationtargets', 'WHERE' => ['notifications_id' => $notif['id']]])->count() : null;
+          $requesterEmail = $DB->request(['FROM' => 'glpi_useremails', 'WHERE' => ['users_id' => $requesterId]])->current();
+          $this->fail(sprintf(
+              "No notification queued. Diagnostics: CFG use_notifications=%s notifications_mailing=%s | notif row=%s is_active=%s | target rows=%s | requester id=%d email=%s",
+              var_export($CFG_GLPI['use_notifications'] ?? null, true),
+              var_export($CFG_GLPI['notifications_mailing'] ?? null, true),
+              $notif ? 'yes(id=' . $notif['id'] . ')' : 'NONE',
+              $notif['is_active'] ?? 'n/a',
+              var_export($targetCount, true),
+              $requesterId,
+              $requesterEmail['email'] ?? 'NONE'
+          ));
+      }
 
        $latest = $DB->request(['FROM' => 'glpi_queuednotifications', 'ORDER' => 'id DESC', 'LIMIT' => 1])->current();
        $this->assertStringContainsString('New security incident', $latest['name']);
@@ -155,7 +170,7 @@ final class SecurityIncidentTest extends SecurityIncidentsTestCase
    public function testSolvingAnIncidentQueuesASolvedNotification(): void {
        global $DB;
 
-        \Config::setConfigurationValues('core', ['use_notifications' => 1]);
+        \Config::setConfigurationValues('core', ['use_notifications' => 1, 'notifications_mailing' => 1]);
         $requesterId = $this->createTestUser('Notif', 'SolvedRequester', ['_useremails' => ['notif.solved.requester@example.test']]);
 
        $entityId = $this->createTestEntity(0, 'PHPUnit Solved Notification Entity');
