@@ -9,6 +9,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+Found by actually clicking through the plugin end-to-end after the initial build, not by
+inspection — a reminder that "the code compiles and CI is green" is not the same claim as
+"a real admin can use this":
+
+- **`Unknown "csrf_field" function` fataled both custom tabs (Analysis, CVE) the moment either
+  was opened.** `csrf_field()` was never a real Twig function in GLPI core — invented, not copied
+  from a working example. The real, confirmed-working pattern (read from a core template,
+  `templates/pages/tools/kb/comment_form.html.twig`) is a plain hidden input reading the
+  `csrf_token()` function: `<input type="hidden" name="_glpi_csrf_token" value="{{ csrf_token() }}">`.
+  Fixed in both `templates/tabs/analysis.html.twig` and `templates/tabs/cve.html.twig`.
+- **`Undefined array key "pluginsecurityincidentssecurityincidenttemplates_id"`** on every
+  incident form — a seventh GLPI core convention this plugin hadn't discovered yet:
+  `CommonITILObject::getITILTemplateToUse()` reads `$categ->fields[$field]` (an `ITILCategory`,
+  no `isset()` guard) and `$_SESSION['glpiactiveprofile'][$field]`, both expecting a column named
+  `strtolower(static::class) . 'templates_id'` — same derivation as the `glpi_entities` columns
+  already added, but on `glpi_itilcategories` and `glpi_profiles` too (mirroring the native
+  `changetemplates_id`/`problemtemplates_id` columns on both tables, confirmed against a real
+  GLPI 11 schema). Added by `Install\Installer` (with an index, matching the native columns'
+  shape), dropped on uninstall.
+- **Two competing "security incident" menu entries confused testing, but neither was actually a
+  bug in this plugin**: the still-active `glpi-vulnerability-manager` plugin (the one this project
+  is meant to replace, per the project plan) registers its own "Tickets sécurité" shortcut under
+  Assistance — a plain `Ticket` search filtered by category, not an autonomous object. Sitting
+  next to this plugin's own, real "Security incidents" menu entry, it read exactly like "the new
+  plugin still files into normal tickets." Deactivating `vulnerability-manager` removed the
+  confusion; no code change was needed in this plugin. (`glpi-vulnerability-manager`'s repository
+  itself is not touched by this — that decision stays separately gated, per the project plan.)
+- **Every plural label rendered in English regardless of session language** — `locales/*.po`
+  wrote each plural pair (`"Security incident"`/`"Security incidents"`, etc.) as two independent
+  `msgid`/`msgstr` entries with no `Plural-Forms` header, which is not valid gettext plural syntax
+  and cannot be matched by `_n()`/`ngettext()`. Rewrote all 5 languages with real
+  `msgid`/`msgid_plural`/`msgstr[0]`/`msgstr[1]` blocks and a `Plural-Forms: nplurals=2;
+  plural=(n > 1);` header (same convention read from assetsign-glpi's own locale files), and
+  compiled the missing `.mo` files (`msgfmt`) — GLPI's plugin loader only reads compiled `.mo`,
+  never `.po` directly. Also had to clear GLPI's own translation cache
+  (`files/_cache/*/translations/`, separate from the Twig template cache) for the fix to take
+  effect on an already-running instance — a stale compiled catalog kept serving the old, broken
+  lookup even after a corrected `.mo` was in place.
+
 ### Added
 
 - Initial plugin skeleton: `PluginSecurityincidentsSecurityIncident` as a native

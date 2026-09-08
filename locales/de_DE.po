@@ -5,45 +5,40 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: de_DE\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
 msgid "Security incident"
-msgstr "Sicherheitsvorfall"
-
-msgid "Security incidents"
-msgstr "Sicherheitsvorfälle"
+msgid_plural "Security incidents"
+msgstr[0] "Sicherheitsvorfall"
+msgstr[1] "Sicherheitsvorfälle"
 
 msgid "Analysis"
 msgstr "Analyse"
 
 msgid "Security incident item"
-msgstr "Sicherheitsvorfall-Element"
-
-msgid "Security incident items"
-msgstr "Sicherheitsvorfall-Elemente"
+msgid_plural "Security incident items"
+msgstr[0] "Sicherheitsvorfall-Element"
+msgstr[1] "Sicherheitsvorfall-Elemente"
 
 msgid "Security incident task"
-msgstr "Sicherheitsvorfall-Aufgabe"
-
-msgid "Security incident tasks"
-msgstr "Sicherheitsvorfall-Aufgaben"
+msgid_plural "Security incident tasks"
+msgstr[0] "Sicherheitsvorfall-Aufgabe"
+msgstr[1] "Sicherheitsvorfall-Aufgaben"
 
 msgid "Security incident template"
-msgstr "Sicherheitsvorfall-Vorlage"
-
-msgid "Security incident templates"
-msgstr "Sicherheitsvorfall-Vorlagen"
+msgid_plural "Security incident templates"
+msgstr[0] "Sicherheitsvorfall-Vorlage"
+msgstr[1] "Sicherheitsvorfall-Vorlagen"
 
 msgid "CVE reference"
-msgstr "CVE-Referenz"
-
-msgid "CVE references"
-msgstr "CVE-Referenzen"
+msgid_plural "CVE references"
+msgstr[0] "CVE-Referenz"
+msgstr[1] "CVE-Referenzen"
 
 msgid "CVE"
-msgstr "CVE"
-
-msgid "CVEs"
-msgstr "CVEs"
+msgid_plural "CVEs"
+msgstr[0] "CVE"
+msgstr[1] "CVEs"
 
 msgid "CVE identifier"
 msgstr "CVE-Kennung"

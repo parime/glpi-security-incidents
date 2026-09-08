@@ -163,7 +163,10 @@ final class SecurityIncidentTest extends SecurityIncidentsTestCase
       }
 
        $latest = $DB->request(['FROM' => 'glpi_queuednotifications', 'ORDER' => 'id DESC', 'LIMIT' => 1])->current();
-       $this->assertStringContainsString('New security incident', $latest['name']);
+        // Not a hardcoded English string: this instance's default language may be anything
+        // (confirmed live — a French dev/CI instance renders this as "Nouvel incident de
+        // sécurité"), so the expectation must go through the same translation call as the code.
+       $this->assertStringContainsString(__('New security incident', 'securityincidents'), $latest['name']);
        $this->assertStringContainsString('Test — notification', $latest['name']);
    }
 
@@ -185,7 +188,7 @@ final class SecurityIncidentTest extends SecurityIncidentsTestCase
        $incident->update(['id' => $id, 'status' => PluginSecurityincidentsSecurityIncident::SOLVED]);
 
        $latest = $DB->request(['FROM' => 'glpi_queuednotifications', 'ORDER' => 'id DESC', 'LIMIT' => 1])->current();
-       $this->assertStringContainsString('Security incident solved', $latest['name']);
+       $this->assertStringContainsString(__('Security incident solved', 'securityincidents'), $latest['name']);
    }
 
     /**

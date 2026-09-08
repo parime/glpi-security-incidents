@@ -1,6 +1,6 @@
 {% if can_edit %}
 <form method="post" action="{{ path('/plugins/securityincidents/front/securityincidentcve.form.php') }}" class="mb-3 d-flex gap-2 align-items-end">
-  {{ csrf_field() }}
+  <input type="hidden" name="_glpi_csrf_token" value="{{ csrf_token() }}">
   <input type="hidden" name="plugin_securityincidents_securityincidents_id" value="{{ item.getID() }}">
   <div>
     <label class="form-label">{{ __('CVE identifier', 'securityincidents') }}</label>
@@ -29,7 +29,7 @@
         {% if can_edit %}
         <td class="text-end">
           <form method="post" action="{{ path('/plugins/securityincidents/front/securityincidentcve.form.php') }}">
-            {{ csrf_field() }}
+            <input type="hidden" name="_glpi_csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="id" value="{{ cve.id }}">
             <button type="submit" name="purge" class="btn btn-sm btn-ghost-danger" onclick="return confirm('{{ __('Are you sure?')|e('js') }}');">
               <i class="ti ti-trash"></i>

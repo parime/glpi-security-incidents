@@ -6,43 +6,37 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 msgid "Security incident"
-msgstr ""
-
-msgid "Security incidents"
-msgstr ""
+msgid_plural "Security incidents"
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "Analysis"
 msgstr ""
 
 msgid "Security incident item"
-msgstr ""
-
-msgid "Security incident items"
-msgstr ""
+msgid_plural "Security incident items"
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "Security incident task"
-msgstr ""
-
-msgid "Security incident tasks"
-msgstr ""
+msgid_plural "Security incident tasks"
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "Security incident template"
-msgstr ""
-
-msgid "Security incident templates"
-msgstr ""
+msgid_plural "Security incident templates"
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "CVE reference"
-msgstr ""
-
-msgid "CVE references"
-msgstr ""
+msgid_plural "CVE references"
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "CVE"
-msgstr ""
-
-msgid "CVEs"
-msgstr ""
+msgid_plural "CVEs"
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "CVE identifier"
 msgstr ""

@@ -344,6 +344,32 @@ final class Installer
           );
       }
 
+       // Same convention, two more places: `CommonITILObject::getTemplateFieldName()` derives
+       // `strtolower($this->getType()) . 'templates_id'` and `getITILTemplateToUse()` reads it
+       // straight off `$categ->fields[$field]` (an ITILCategory, no isset() guard — confirmed live,
+       // this produced a real "Undefined array key" warning on every incident form) and off
+       // `$_SESSION['glpiactiveprofile'][$field]` (populated verbatim from `glpi_profiles` columns).
+       // Same shape as the native `changetemplates_id`/`problemtemplates_id` columns on both tables
+       // (checked against a real GLPI 11 instance's own schema).
+      if (!$DB->fieldExists('glpi_itilcategories', 'pluginsecurityincidentssecurityincidenttemplates_id')) {
+          $migration->addField(
+              'glpi_itilcategories',
+              'pluginsecurityincidentssecurityincidenttemplates_id',
+              'integer',
+              ['value' => 0, 'after' => 'problemtemplates_id']
+          );
+          $migration->addKey('glpi_itilcategories', 'pluginsecurityincidentssecurityincidenttemplates_id');
+      }
+      if (!$DB->fieldExists('glpi_profiles', 'pluginsecurityincidentssecurityincidenttemplates_id')) {
+          $migration->addField(
+              'glpi_profiles',
+              'pluginsecurityincidentssecurityincidenttemplates_id',
+              'integer',
+              ['value' => 0, 'after' => 'problemtemplates_id']
+          );
+          $migration->addKey('glpi_profiles', 'pluginsecurityincidentssecurityincidenttemplates_id');
+      }
+
        Profile::install($migration);
 
        $migration->executeMigration();
@@ -439,6 +465,8 @@ final class Installer
 
        $migration->dropField('glpi_entities', 'pluginsecurityincidentssecurityincidenttemplates_id');
        $migration->dropField('glpi_entities', 'pluginsecurityincidentssecurityincidenttemplates_strategy');
+       $migration->dropField('glpi_itilcategories', 'pluginsecurityincidentssecurityincidenttemplates_id');
+       $migration->dropField('glpi_profiles', 'pluginsecurityincidentssecurityincidenttemplates_id');
        $migration->executeMigration();
 
         // Notification::cleanDBonPurge()/NotificationTemplate::cleanDBonPurge() (confirmed by
