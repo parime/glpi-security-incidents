@@ -67,6 +67,54 @@ class PluginSecurityincidentsSecurityIncident extends CommonITILObject
        return ['helpdesk', self::class];
    }
 
+    /**
+     * `CommonITILObject`'s own status-array methods explicitly say "to be overridden by class" and
+     * default to an empty array — confirmed the hard way: `handleNewItemNotifications()` fataled
+     * with "Empty IN are not allowed" (`getSolvedStatusArray()`/`getClosedStatusArray()` both `[]`,
+     * merged into a `NOT IN ()` SQL clause) the first time a real incident was created after
+     * notifications were wired up. Uses only the base, universally-shared lifecycle constants
+     * (`INCOMING`/`ASSIGNED`/`PLANNED`/`WAITING`/`SOLVED`/`CLOSED`, defined on `CommonITILObject`
+     * itself) rather than `Change`'s own richer set (`EVALUATION`/`APPROVAL`/`TEST`/`QUALIFICATION`/
+     * `OBSERVED`/`CANCELED`/`REFUSED`) — a security incident's workflow doesn't need change-specific
+     * approval/testing/rollback states.
+     */
+   public static function getAllStatusArray($withmetaforsearch = false) {
+       $status = [
+           self::INCOMING => _x('status', 'New'),
+           self::ASSIGNED => __('Processing (assigned)'),
+           self::PLANNED => __('Processing (planned)'),
+           self::WAITING => __('Pending'),
+           self::SOLVED => __('Solved'),
+           self::CLOSED => _x('status', 'Closed'),
+       ];
+
+       if ($withmetaforsearch) {
+           $status['notold'] = _x('status', 'Not solved');
+           $status['notclosed'] = _x('status', 'Not closed');
+           $status['process'] = __('Processing');
+           $status['old'] = _x('status', 'Solved + Closed');
+           $status['all'] = __('All');
+       }
+
+       return $status;
+   }
+
+   public static function getClosedStatusArray() {
+       return [self::CLOSED];
+   }
+
+   public static function getSolvedStatusArray() {
+       return [self::SOLVED];
+   }
+
+   public static function getNewStatusArray() {
+       return [self::INCOMING];
+   }
+
+   public static function getProcessStatusArray() {
+       return [self::ASSIGNED, self::PLANNED];
+   }
+
    public static function getDefaultValues($entity = 0) {
        $usersId = is_numeric(Session::getLoginUserID(false)) ? Session::getLoginUserID() : 0;
        $defaultUseNotif = Entity::getUsedConfig('is_notif_enable_default', $_SESSION['glpiactive_entity'] ?? 0, '', 1);
@@ -170,6 +218,7 @@ class PluginSecurityincidentsSecurityIncident extends CommonITILObject
        $this->addStandardTab(self::class, $tabs, $options);
        $this->addStandardTab(PluginSecurityincidentsSecurityIncidentCve::class, $tabs, $options);
        $this->addStandardTab(PluginSecurityincidentsSecurityIncident_Item::class, $tabs, $options);
+       $this->addStandardTab(PluginSecurityincidentsSecurityIncidentCost::class, $tabs, $options);
        $this->addStandardTab(KnowbaseItem_Item::class, $tabs, $options);
        $this->addStandardTab(Notepad::class, $tabs, $options);
        $this->addStandardTab(Log::class, $tabs, $options);
@@ -205,11 +254,12 @@ class PluginSecurityincidentsSecurityIncident extends CommonITILObject
 
    public function cleanDBonPurge() {
        $task = new PluginSecurityincidentsSecurityIncidentTask();
-       $task->deleteByCriteria(['securityincidents_id' => $this->fields['id']]);
+       $task->deleteByCriteria(['plugin_securityincidents_securityincidents_id' => $this->fields['id']]);
 
        $this->deleteChildrenAndRelationsFromDb([
            PluginSecurityincidentsSecurityIncident_Item::class,
            PluginSecurityincidentsSecurityIncidentCve::class,
+           PluginSecurityincidentsSecurityIncidentCost::class,
        ]);
 
        parent::cleanDBonPurge();

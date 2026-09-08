@@ -23,6 +23,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`PluginSecurityincidentsSecurityIncidentCve`, one or more `CVE-YYYY-NNNN` identifiers per
   incident).
 
+### Fixed
+
+Four more real, reproduced-live GLPI 11 core surprises found while verifying end-to-end that a
+created incident actually notifies anyone (see the naming-convention note below for the first two
+found earlier in the same investigation):
+
+- **`CommonITILObject`'s status-array methods default to an empty array** ("to be overridden by
+  class") — left unoverridden, `NotificationTargetCommonITILObject::getDataForObject()` merges
+  `getSolvedStatusArray()`/`getClosedStatusArray()` into a SQL `NOT IN (...)` clause and fatals with
+  "Empty IN are not allowed" the moment a real notification is raised. Added
+  `getAllStatusArray()`/`getClosedStatusArray()`/`getSolvedStatusArray()`/`getNewStatusArray()`/
+  `getProcessStatusArray()` overrides using the base, universally-shared lifecycle constants
+  (`INCOMING`/`ASSIGNED`/`PLANNED`/`WAITING`/`SOLVED`/`CLOSED`).
+- **A `PluginSecurityincidentsSecurityIncidentCost` class is required, not optional** — same class
+  of surprise as the Template requirement below:
+  `NotificationTargetCommonITILObject::getDataForObject()` unconditionally builds
+  `$item->getType() . 'Cost'` and calls `$costtype::getCostsSummary(...)` on it with **no existence
+  check at all**. Added, mirroring GLPI core's own minimal `ChangeCost`, plus its own tab and table.
+- **Several satellite tables used the wrong foreign-key column name.** `securityincidents_id`
+  (chosen by hand) was never what GLPI core actually expects: `CommonITILObject::
+  getAssociatedDocumentsCriteria()` (used to list a task's associated documents) builds its `WHERE`
+  from `$this->getForeignKeyField()`, which — because it derives from the class's own `getTable()`,
+  not a hand-picked property — is `plugin_securityincidents_securityincidents_id`. Renamed
+  everywhere (tables, class properties, tests, front controllers, the CVE tab template) to match.
+- **`Install\Installer` never seeded a `Notification`/`NotificationTemplate` row for any of the
+  four ITIL lifecycle events** — without one, `NotificationEvent::raiseEvent()` (called from
+  `post_addItem()`/`post_updateItem()`) silently does nothing; a real incident could be created with
+  no email ever queued. One shared template for all four events plus their `Notification`/
+  `NotificationTarget` rows are now seeded at install (target `items_id`/`type` values copied
+  verbatim from a real GLPI 11 install's own native `Change` notification rows — confirmed the two
+  numbering schemes involved are easy to confuse and only one is correct).
+- **`ALLSTANDARDRIGHT` alone is not enough for an ITIL object's Super-Admin grant.**
+  `PluginSecurityincidentsSecurityIncident::getRights()` adds `self::READALL` (bit 1024, distinct
+  from the base `READ`/`READMY` bit it replaces) — granting only `ALLSTANDARDRIGHT` (31) at install
+  left even Super-Admin with a real 403 viewing an incident they hadn't personally created or been
+  assigned to. `Profile::install()` now grants `ALLSTANDARDRIGHT | PluginSecurityincidentsSecurityIncident::READALL`.
+
+Verified for real after every fix above: creating an incident now queues a genuine
+"New security incident" notification, and changing its status to solved queues
+"Security incident solved" — the full chain (status arrays, seeded notification, the Cost/Template
+classes core instantiates by convention, and the Super-Admin rights grant) confirmed working
+together on a real GLPI 11 instance, not just individually. Regression tests added for all five.
+
 ### Note on the class naming convention
 
 Every class hooking into GLPI's `CommonITILObject`/`ITILTemplate`/`CommonITILTask` conventions

@@ -55,25 +55,25 @@ if (isset($_POST['add'])) {
     $securityIncident->update($_POST);
     Html::back();
 } else if (isset($_POST['addme_observer'])) {
-    $securityIncident->check($_POST['securityincidents_id'], READ);
+    $securityIncident->check($_POST['plugin_securityincidents_securityincidents_id'], READ);
     $securityIncident->update(array_merge($securityIncident->fields, [
-        'id' => $_POST['securityincidents_id'],
+        'id' => $_POST['plugin_securityincidents_securityincidents_id'],
         '_itil_observer' => [
             '_type' => 'user',
             'users_id' => Session::getLoginUserID(),
             'use_notification' => 1,
         ],
     ]));
-    Html::redirect(PluginSecurityincidentsSecurityIncident::getFormURLWithID($_POST['securityincidents_id']));
+    Html::redirect(PluginSecurityincidentsSecurityIncident::getFormURLWithID($_POST['plugin_securityincidents_securityincidents_id']));
 } else if (isset($_POST['addme_assign'])) {
-    $securityIncident->check($_POST['securityincidents_id'], READ);
+    $securityIncident->check($_POST['plugin_securityincidents_securityincidents_id'], READ);
     (new PluginSecurityincidentsSecurityIncident_User())->add([
-        'securityincidents_id' => $_POST['securityincidents_id'],
+        'plugin_securityincidents_securityincidents_id' => $_POST['plugin_securityincidents_securityincidents_id'],
         'users_id' => Session::getLoginUserID(),
         'use_notification' => 1,
         'type' => CommonITILActor::ASSIGN,
     ]);
-    Html::redirect(PluginSecurityincidentsSecurityIncident::getFormURLWithID($_POST['securityincidents_id']));
+    Html::redirect(PluginSecurityincidentsSecurityIncident::getFormURLWithID($_POST['plugin_securityincidents_securityincidents_id']));
 } else {
     $menus = ['helpdesk', PluginSecurityincidentsSecurityIncident::class];
     PluginSecurityincidentsSecurityIncident::displayFullPageForItem((int) ($_REQUEST['id'] ?? 0), $menus, $_REQUEST);

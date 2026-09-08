@@ -1,7 +1,7 @@
 {% if can_edit %}
 <form method="post" action="{{ path('/plugins/securityincidents/front/securityincidentcve.form.php') }}" class="mb-3 d-flex gap-2 align-items-end">
   {{ csrf_field() }}
-  <input type="hidden" name="securityincidents_id" value="{{ item.getID() }}">
+  <input type="hidden" name="plugin_securityincidents_securityincidents_id" value="{{ item.getID() }}">
   <div>
     <label class="form-label">{{ __('CVE identifier', 'securityincidents') }}</label>
     <input type="text" name="cve_id" class="form-control" placeholder="CVE-2026-12345" required>

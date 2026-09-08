@@ -47,7 +47,7 @@ class PluginSecurityincidentsSecurityIncidentCve extends CommonDBTM
 
        $count = $item->isNewID($item->getID()) ? 0 : countElementsInTable(
            self::getTable(),
-           ['securityincidents_id' => $item->getID()]
+           ['plugin_securityincidents_securityincidents_id' => $item->getID()]
        );
 
        return self::createTabEntry(_n('CVE', 'CVEs', $count, 'securityincidents'), $count, $item::class);
@@ -61,7 +61,7 @@ class PluginSecurityincidentsSecurityIncidentCve extends CommonDBTM
        $cves = [];
       if (!$item->isNewID($item->getID())) {
           $cve = new self();
-          $cves = $cve->find(['securityincidents_id' => $item->getID()], ['cve_id ASC']);
+          $cves = $cve->find(['plugin_securityincidents_securityincidents_id' => $item->getID()], ['cve_id ASC']);
       }
 
        Glpi\Application\View\TemplateRenderer::getInstance()->display('@securityincidents/tabs/cve.html.twig', [

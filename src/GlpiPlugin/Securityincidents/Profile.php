@@ -51,9 +51,20 @@ class Profile
          }
       }
 
+       // ALLSTANDARDRIGHT alone (READ/UPDATE/CREATE/DELETE/PURGE = 31) is NOT enough for an ITIL
+       // object: PluginSecurityincidentsSecurityIncident::getRights() adds READALL (bit 1024, a
+       // separate value from the base READ/READMY bit it replaces) on top of the standard set —
+       // confirmed the hard way, Super-Admin got a real 403 reading an incident they didn't
+       // personally create/get assigned to, since READMY (implied by the standard bits) alone
+       // requires being an actor on the item. Same "ALLSTANDARDRIGHT is not the full ITIL right
+       // set" gap GLPI core itself avoids for Ticket/Change/Problem by granting a much larger
+       // bitmask to Super-Admin at install (confirmed against a real instance: native `change`
+       // right for Super-Admin is 132223, not 31).
        $rows = $DB->request(['FROM' => \Profile::getTable(), 'WHERE' => ['name' => 'Super-Admin']]);
       foreach ($rows as $row) {
-          \ProfileRight::updateProfileRights((int) $row['id'], [$right => ALLSTANDARDRIGHT]);
+          \ProfileRight::updateProfileRights((int) $row['id'], [
+              $right => ALLSTANDARDRIGHT | \PluginSecurityincidentsSecurityIncident::READALL,
+          ]);
       }
    }
 

@@ -20,6 +20,9 @@ namespace GlpiPlugin\Securityincidents\Install;
 use DBConnection;
 use GlpiPlugin\Securityincidents\Profile;
 use Migration;
+use Notification;
+use NotificationTemplate;
+use PluginSecurityincidentsSecurityIncident;
 use Toolbox;
 
 /**
@@ -45,6 +48,8 @@ final class Installer
    private const TASKS_TABLE = 'glpi_plugin_securityincidents_securityincidenttasks';
 
    private const CVES_TABLE = 'glpi_plugin_securityincidents_securityincidentcves';
+
+   private const COSTS_TABLE = 'glpi_plugin_securityincidents_securityincidentcosts';
 
     // Shortened (not mirroring the class names) — the class-name-derived default exceeds MySQL's
     // 64-character table name limit, see SecurityIncidentTemplate::getTable()'s own docblock.
@@ -116,13 +121,13 @@ final class Installer
       if (!$DB->tableExists(self::INCIDENTS_USERS_TABLE)) {
           $query = "CREATE TABLE `" . self::INCIDENTS_USERS_TABLE . "` (
                 `id` int {$keySign} NOT NULL AUTO_INCREMENT,
-                `securityincidents_id` int {$keySign} NOT NULL DEFAULT 0,
+                `plugin_securityincidents_securityincidents_id` int {$keySign} NOT NULL DEFAULT 0,
                 `users_id` int {$keySign} NOT NULL DEFAULT 0,
                 `type` int NOT NULL DEFAULT 1,
                 `use_notification` tinyint NOT NULL DEFAULT 0,
                 `alternative_email` varchar(255) DEFAULT NULL,
                 PRIMARY KEY (`id`),
-                KEY `securityincidents_id` (`securityincidents_id`),
+                KEY `plugin_securityincidents_securityincidents_id` (`plugin_securityincidents_securityincidents_id`),
                 KEY `users_id` (`users_id`),
                 KEY `type` (`type`)
             ) ENGINE=InnoDB DEFAULT CHARSET={$charset} COLLATE={$collation}";
@@ -137,11 +142,11 @@ final class Installer
       if (!$DB->tableExists(self::INCIDENTS_GROUPS_TABLE)) {
           $query = "CREATE TABLE `" . self::INCIDENTS_GROUPS_TABLE . "` (
                 `id` int {$keySign} NOT NULL AUTO_INCREMENT,
-                `securityincidents_id` int {$keySign} NOT NULL DEFAULT 0,
+                `plugin_securityincidents_securityincidents_id` int {$keySign} NOT NULL DEFAULT 0,
                 `groups_id` int {$keySign} NOT NULL DEFAULT 0,
                 `type` int NOT NULL DEFAULT 1,
                 PRIMARY KEY (`id`),
-                KEY `securityincidents_id` (`securityincidents_id`),
+                KEY `plugin_securityincidents_securityincidents_id` (`plugin_securityincidents_securityincidents_id`),
                 KEY `groups_id` (`groups_id`),
                 KEY `type` (`type`)
             ) ENGINE=InnoDB DEFAULT CHARSET={$charset} COLLATE={$collation}";
@@ -156,13 +161,13 @@ final class Installer
       if (!$DB->tableExists(self::INCIDENTS_SUPPLIERS_TABLE)) {
           $query = "CREATE TABLE `" . self::INCIDENTS_SUPPLIERS_TABLE . "` (
                 `id` int {$keySign} NOT NULL AUTO_INCREMENT,
-                `securityincidents_id` int {$keySign} NOT NULL DEFAULT 0,
+                `plugin_securityincidents_securityincidents_id` int {$keySign} NOT NULL DEFAULT 0,
                 `suppliers_id` int {$keySign} NOT NULL DEFAULT 0,
                 `type` int NOT NULL DEFAULT 1,
                 `use_notification` tinyint NOT NULL DEFAULT 0,
                 `alternative_email` varchar(255) DEFAULT NULL,
                 PRIMARY KEY (`id`),
-                KEY `securityincidents_id` (`securityincidents_id`),
+                KEY `plugin_securityincidents_securityincidents_id` (`plugin_securityincidents_securityincidents_id`),
                 KEY `suppliers_id` (`suppliers_id`),
                 KEY `type` (`type`)
             ) ENGINE=InnoDB DEFAULT CHARSET={$charset} COLLATE={$collation}";
@@ -177,11 +182,11 @@ final class Installer
       if (!$DB->tableExists(self::INCIDENTS_ITEMS_TABLE)) {
           $query = "CREATE TABLE `" . self::INCIDENTS_ITEMS_TABLE . "` (
                 `id` int {$keySign} NOT NULL AUTO_INCREMENT,
-                `securityincidents_id` int {$keySign} NOT NULL DEFAULT 0,
+                `plugin_securityincidents_securityincidents_id` int {$keySign} NOT NULL DEFAULT 0,
                 `itemtype` varchar(100) DEFAULT NULL,
                 `items_id` int {$keySign} NOT NULL DEFAULT 0,
                 PRIMARY KEY (`id`),
-                KEY `securityincidents_id` (`securityincidents_id`),
+                KEY `plugin_securityincidents_securityincidents_id` (`plugin_securityincidents_securityincidents_id`),
                 KEY `item` (`itemtype`,`items_id`)
             ) ENGINE=InnoDB DEFAULT CHARSET={$charset} COLLATE={$collation}";
 
@@ -196,7 +201,7 @@ final class Installer
           $query = "CREATE TABLE `" . self::TASKS_TABLE . "` (
                 `id` int {$keySign} NOT NULL AUTO_INCREMENT,
                 `uuid` varchar(255) DEFAULT NULL,
-                `securityincidents_id` int {$keySign} NOT NULL DEFAULT 0,
+                `plugin_securityincidents_securityincidents_id` int {$keySign} NOT NULL DEFAULT 0,
                 `taskcategories_id` int {$keySign} NOT NULL DEFAULT 0,
                 `state` int NOT NULL DEFAULT 0,
                 `date` timestamp NULL DEFAULT NULL,
@@ -214,7 +219,7 @@ final class Installer
                 `timeline_position` tinyint NOT NULL DEFAULT 0,
                 `is_private` tinyint NOT NULL DEFAULT 0,
                 PRIMARY KEY (`id`),
-                KEY `securityincidents_id` (`securityincidents_id`),
+                KEY `plugin_securityincidents_securityincidents_id` (`plugin_securityincidents_securityincidents_id`),
                 KEY `users_id` (`users_id`),
                 KEY `users_id_tech` (`users_id_tech`)
             ) ENGINE=InnoDB DEFAULT CHARSET={$charset} COLLATE={$collation}";
@@ -229,16 +234,43 @@ final class Installer
       if (!$DB->tableExists(self::CVES_TABLE)) {
           $query = "CREATE TABLE `" . self::CVES_TABLE . "` (
                 `id` int {$keySign} NOT NULL AUTO_INCREMENT,
-                `securityincidents_id` int {$keySign} NOT NULL DEFAULT 0,
+                `plugin_securityincidents_securityincidents_id` int {$keySign} NOT NULL DEFAULT 0,
                 `cve_id` varchar(20) NOT NULL DEFAULT '',
                 `date_creation` timestamp NULL DEFAULT NULL,
                 `date_mod` timestamp NULL DEFAULT NULL,
                 PRIMARY KEY (`id`),
-                UNIQUE KEY `unicity` (`securityincidents_id`,`cve_id`)
+                UNIQUE KEY `unicity` (`plugin_securityincidents_securityincidents_id`,`cve_id`)
             ) ENGINE=InnoDB DEFAULT CHARSET={$charset} COLLATE={$collation}";
 
          if (!$DB->doQuery($query)) {
              Toolbox::logInFile('sql-errors', sprintf("[securityincidents] %s: %s\n", self::CVES_TABLE, $DB->error()));
+
+             return false;
+         }
+      }
+
+      if (!$DB->tableExists(self::COSTS_TABLE)) {
+          $query = "CREATE TABLE `" . self::COSTS_TABLE . "` (
+                `id` int {$keySign} NOT NULL AUTO_INCREMENT,
+                `plugin_securityincidents_securityincidents_id` int {$keySign} NOT NULL DEFAULT 0,
+                `name` varchar(255) DEFAULT NULL,
+                `comment` text,
+                `begin_date` date DEFAULT NULL,
+                `end_date` date DEFAULT NULL,
+                `actiontime` int NOT NULL DEFAULT 0,
+                `cost_time` decimal(20,4) NOT NULL DEFAULT 0.0000,
+                `cost_fixed` decimal(20,4) NOT NULL DEFAULT 0.0000,
+                `cost_material` decimal(20,4) NOT NULL DEFAULT 0.0000,
+                `budgets_id` int {$keySign} NOT NULL DEFAULT 0,
+                `entities_id` int {$keySign} NOT NULL DEFAULT 0,
+                `is_recursive` tinyint NOT NULL DEFAULT 0,
+                PRIMARY KEY (`id`),
+                KEY `plugin_securityincidents_securityincidents_id` (`plugin_securityincidents_securityincidents_id`),
+                KEY `entities_id` (`entities_id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET={$charset} COLLATE={$collation}";
+
+         if (!$DB->doQuery($query)) {
+             Toolbox::logInFile('sql-errors', sprintf("[securityincidents] %s: %s\n", self::COSTS_TABLE, $DB->error()));
 
              return false;
          }
@@ -316,7 +348,90 @@ final class Installer
 
        $migration->executeMigration();
 
+       $this->seedNotifications();
+
        return true;
+   }
+
+    /**
+     * Without this, `NotificationEvent::raiseEvent('new'|'update'|'solved'|'closed', $this)`
+     * (called from `PluginSecurityincidentsSecurityIncident::post_addItem()`/`post_updateItem()`)
+     * finds no active `Notification` row to fire and silently does nothing — confirmed live: an
+     * incident could be created with no email ever queued. One shared `NotificationTemplate` for
+     * all four events (same pattern as GLPI core's own native `Change` notifications, which all
+     * point at the same template id and rely on the `##…action##`/`##…storestatus##` tags to
+     * adapt wording per event — read directly from a real GLPI 11 install rather than guessed) and
+     * four `Notification` rows. Target `items_id`/`type` values (1, 3, 21, and 1/2/3/4/21 for
+     * "update") are copied verbatim from that same real install's own `glpi_notificationtargets`
+     * rows for `Change` — `NotificationTargetCommonITILObject::getTargets()` (the shared parent
+     * class both `Change`'s and this plugin's own notification target extend) interprets them
+     * identically regardless of itemtype, so the exact values GLPI core itself seeds are the
+     * correct ones to reuse, not re-derived from the `Notification`/`CommonITILActor` constant
+     * lists by hand (the two enumerations look confusingly similar but are not the same list).
+     */
+   private function seedNotifications(): void {
+       $itemtype = PluginSecurityincidentsSecurityIncident::class;
+       $tag = strtolower($itemtype);
+
+       $template = new NotificationTemplate();
+      if (!$template->getFromDBByCrit(['itemtype' => $itemtype, 'name' => 'Security incident'])) {
+          $templateId = $template->add([
+              'name' => 'Security incident',
+              'itemtype' => $itemtype,
+              'comment' => 'Seeded at install by the Security Incidents plugin.',
+          ]);
+
+          (new \NotificationTemplateTranslation())->add([
+              'notificationtemplates_id' => $templateId,
+              'language' => '',
+              'subject' => "##{$tag}.action## ##{$tag}.title##",
+              'content_text' => "##{$tag}.action## ##{$tag}.title##\n\n"
+                  . "##{$tag}.url##\n\n"
+                  . "##{$tag}.content##",
+              'content_html' => "<p>##{$tag}.action## ##{$tag}.title##</p>"
+                  . "<p><a href=\"##{$tag}.url##\">##{$tag}.url##</a></p>"
+                  . "<p>##{$tag}.content##</p>",
+          ]);
+      } else {
+          $templateId = (int) $template->getID();
+      }
+
+       $eventsAndTargets = [
+           'new' => [1, 3, 21],
+           'update' => [1, 2, 3, 4, 21],
+           'solved' => [1, 3, 21],
+           'closed' => [1, 3, 21],
+       ];
+
+       foreach ($eventsAndTargets as $event => $targetItemsIds) {
+           $notification = new Notification();
+          if ($notification->getFromDBByCrit(['itemtype' => $itemtype, 'event' => $event])) {
+              continue;
+          }
+
+           $notificationId = $notification->add([
+               'name' => 'Security incident — ' . $event,
+               'entities_id' => 0,
+               'is_recursive' => 1,
+               'is_active' => 1,
+               'itemtype' => $itemtype,
+               'event' => $event,
+           ]);
+
+           (new \Notification_NotificationTemplate())->add([
+               'notifications_id' => $notificationId,
+               'notificationtemplates_id' => $templateId,
+               'mode' => 'mailing',
+           ]);
+
+          foreach ($targetItemsIds as $targetItemsId) {
+             (new \NotificationTarget())->add([
+                 'notifications_id' => $notificationId,
+                 'items_id' => $targetItemsId,
+                 'type' => Notification::USER_TYPE,
+             ]);
+          }
+       }
    }
 
    public function uninstall(Migration $migration): bool {
@@ -326,12 +441,25 @@ final class Installer
        $migration->dropField('glpi_entities', 'pluginsecurityincidentssecurityincidenttemplates_strategy');
        $migration->executeMigration();
 
+        // Notification::cleanDBonPurge()/NotificationTemplate::cleanDBonPurge() (confirmed by
+        // reading GLPI core) already cascade to glpi_notifications_notificationtemplates and
+        // glpi_notificationtargets themselves — deleting the Notification/NotificationTemplate
+        // rows is enough, no separate cleanup of the join tables needed.
+        $itemtype = \PluginSecurityincidentsSecurityIncident::class;
+      foreach ((new Notification())->find(['itemtype' => $itemtype]) as $row) {
+          (new Notification())->delete(['id' => $row['id']], true);
+      }
+      foreach ((new NotificationTemplate())->find(['itemtype' => $itemtype]) as $row) {
+          (new NotificationTemplate())->delete(['id' => $row['id']], true);
+      }
+
       foreach ([
            self::TEMPLATES_PREDEFINED_FIELDS_TABLE,
            self::TEMPLATES_HIDDEN_FIELDS_TABLE,
            self::TEMPLATES_MANDATORY_FIELDS_TABLE,
            self::TEMPLATES_READONLY_FIELDS_TABLE,
            self::TEMPLATES_TABLE,
+           self::COSTS_TABLE,
            self::CVES_TABLE,
            self::TASKS_TABLE,
            self::INCIDENTS_ITEMS_TABLE,

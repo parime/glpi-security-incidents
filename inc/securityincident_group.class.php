@@ -23,7 +23,7 @@ class PluginSecurityincidentsSecurityIncident_Group extends CommonITILActor
 {
    public static $itemtype_1 = PluginSecurityincidentsSecurityIncident::class;
 
-   public static $items_id_1 = 'securityincidents_id';
+   public static $items_id_1 = 'plugin_securityincidents_securityincidents_id';
 
    public static $itemtype_2 = Group::class;
 
