@@ -124,13 +124,19 @@ jobs:
         run: docker exec glpi sh -c "cd /var/www/glpi/plugins/securityincidents && vendor/bin/phpcs --standard=vendor/glpi-project/coding-standard/GlpiStandard/ruleset.xml src inc front hook.php setup.php"
 
       - name: Audit de sécurité des dépendances Composer
+        # Pas de --no-dev (contrairement au plugin jumeau assetsign-glpi) : ce plugin n'a AUCUNE
+        # dependance de production (composer.json ne declare que php >=8.2), donc --no-dev
+        # laisserait "aucun paquet installe" a auditer et composer audit sort en erreur - audite
+        # les dependances de dev a la place, seules presentes ici. --abandoned=report (au lieu du
+        # defaut "fail") : glpi-project/coding-standard est marque abandonne sur Packagist, sans
+        # lien avec une vraie vulnerabilite, ne doit pas a lui seul faire echouer cette etape.
         run: |
           for i in 1 2 3; do
-            docker exec glpi sh -c "cd /var/www/glpi/plugins/securityincidents && export COMPOSER_HOME=/tmp/composer-home && php /tmp/composer.phar audit --no-dev" && exit 0
+            docker exec glpi sh -c "cd /var/www/glpi/plugins/securityincidents && export COMPOSER_HOME=/tmp/composer-home && php /tmp/composer.phar audit --abandoned=report" && exit 0
             echo "composer audit a echoue (tentative $i/3), nouvel essai dans 15s..."
             sleep 15
           done
-          docker exec glpi sh -c "cd /var/www/glpi/plugins/securityincidents && export COMPOSER_HOME=/tmp/composer-home && php /tmp/composer.phar audit --no-dev"
+          docker exec glpi sh -c "cd /var/www/glpi/plugins/securityincidents && export COMPOSER_HOME=/tmp/composer-home && php /tmp/composer.phar audit --abandoned=report"
 
       - name: Installe et active le plugin
         run: |
@@ -162,6 +168,11 @@ jobs:
           leftover_rights=$(docker exec glpi mariadb -h mariadb -u glpi_user -pglpi_password glpidb -N -e "SELECT COUNT(*) FROM glpi_profilerights WHERE name LIKE 'plugin_securityincidents_%'")
           if [ "$leftover_rights" != "0" ]; then
             echo "::error::$leftover_rights droit(s) residuel(s) apres desinstallation."
+            exit 1
+          fi
+          leftover_columns=$(docker exec glpi mariadb -h mariadb -u glpi_user -pglpi_password glpidb -N -e "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = 'glpidb' AND TABLE_NAME = 'glpi_entities' AND COLUMN_NAME LIKE 'pluginsecurityincidents%'")
+          if [ "$leftover_columns" != "0" ]; then
+            echo "::error::$leftover_columns colonne(s) residuelle(s) sur glpi_entities apres desinstallation."
             exit 1
           fi
           docker exec glpi php bin/console plugin:install securityincidents --force --no-interaction
