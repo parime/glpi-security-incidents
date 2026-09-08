@@ -122,18 +122,26 @@ final class SecurityIncidentTest extends SecurityIncidentsTestCase
    public function testCreatingAnIncidentQueuesANewNotification(): void {
        global $DB;
 
-        // A notification never fires with GLPI's own `use_notifications` core setting off — not
-        // this plugin's to control, but not something this test can assume ambient either (a
-        // freshly auto-installed GLPI instance, like the one this suite runs against in CI, does
-        // not enable it by default). Explicitly turning it on is the correct precondition, same
-        // as an admin would do once before relying on any notification at all.
+        // Two preconditions a real caller (a form submission by an authenticated user) always
+        // provides, neither of which this test can assume ambient on a freshly auto-installed
+        // GLPI instance (confirmed live: CI's own from-scratch instance has notifications OFF and
+        // no email on the built-in "glpi" account, either of which alone is enough for every
+        // notification target to resolve to zero real recipients and queue nothing):
+        // `use_notifications` on, and a real requester actor with a real email address (the
+        // "AUTHOR"/items_id=3 target this plugin's own seeded rows rely on).
         \Config::setConfigurationValues('core', ['use_notifications' => 1]);
+        $requesterId = $this->createTestUser('Notif', 'Requester', ['_useremails' => ['notif.requester@example.test']]);
 
        $entityId = $this->createTestEntity(0, 'PHPUnit Notification Entity');
        $countBefore = $DB->request(['FROM' => 'glpi_queuednotifications'])->count();
 
        $incident = new PluginSecurityincidentsSecurityIncident();
-       $id = $incident->add(['name' => 'Test — notification', 'entities_id' => $entityId, 'content' => 'x']);
+       $id = $incident->add([
+           'name' => 'Test — notification',
+           'entities_id' => $entityId,
+           'content' => 'x',
+           '_users_id_requester' => $requesterId,
+       ]);
        $this->assertGreaterThan(0, $id);
 
        $countAfter = $DB->request(['FROM' => 'glpi_queuednotifications'])->count();
@@ -148,10 +156,16 @@ final class SecurityIncidentTest extends SecurityIncidentsTestCase
        global $DB;
 
         \Config::setConfigurationValues('core', ['use_notifications' => 1]);
+        $requesterId = $this->createTestUser('Notif', 'SolvedRequester', ['_useremails' => ['notif.solved.requester@example.test']]);
 
        $entityId = $this->createTestEntity(0, 'PHPUnit Solved Notification Entity');
        $incident = new PluginSecurityincidentsSecurityIncident();
-       $id = $incident->add(['name' => 'Test — solved notification', 'entities_id' => $entityId, 'content' => 'x']);
+       $id = $incident->add([
+           'name' => 'Test — solved notification',
+           'entities_id' => $entityId,
+           'content' => 'x',
+           '_users_id_requester' => $requesterId,
+       ]);
 
        $incident->update(['id' => $id, 'status' => PluginSecurityincidentsSecurityIncident::SOLVED]);
 
