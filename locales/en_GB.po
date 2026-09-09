@@ -84,3 +84,6 @@ msgstr "New / updated / solved / closed notifications are pre-configured at inst
 
 msgid "Setup > Notifications"
 msgstr "Setup > Notifications"
+
+msgid "Business rules for security incidents"
+msgstr "Business rules for security incidents"

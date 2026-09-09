@@ -84,3 +84,6 @@ msgstr "Le notifiche nuovo / aggiornato / risolto / chiuso sono preconfigurate a
 
 msgid "Setup > Notifications"
 msgstr "Configurazione > Notifiche"
+
+msgid "Business rules for security incidents"
+msgstr "Regole aziendali per gli incidenti di sicurezza"
