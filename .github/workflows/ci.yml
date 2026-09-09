@@ -170,11 +170,13 @@ jobs:
             echo "::error::$leftover_rights droit(s) residuel(s) apres desinstallation."
             exit 1
           fi
-          leftover_columns=$(docker exec glpi mariadb -h mariadb -u glpi_user -pglpi_password glpidb -N -e "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = 'glpidb' AND TABLE_NAME = 'glpi_entities' AND COLUMN_NAME LIKE 'pluginsecurityincidents%'")
-          if [ "$leftover_columns" != "0" ]; then
-            echo "::error::$leftover_columns colonne(s) residuelle(s) sur glpi_entities apres desinstallation."
-            exit 1
-          fi
+          for table in glpi_entities glpi_itilcategories glpi_profiles; do
+            leftover_columns=$(docker exec glpi mariadb -h mariadb -u glpi_user -pglpi_password glpidb -N -e "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = 'glpidb' AND TABLE_NAME = '${table}' AND COLUMN_NAME LIKE 'pluginsecurityincidents%'")
+            if [ "$leftover_columns" != "0" ]; then
+              echo "::error::$leftover_columns colonne(s) residuelle(s) sur ${table} apres desinstallation."
+              exit 1
+            fi
+          done
           docker exec glpi php bin/console plugin:install securityincidents --force --no-interaction
           docker exec glpi php bin/console plugin:activate securityincidents --no-interaction
 
