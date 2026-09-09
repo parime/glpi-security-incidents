@@ -88,6 +88,19 @@ class PluginSecurityincidentsSecurityIncidentCve extends CommonDBTM
    }
 
     /**
+     * Splits a textarea's raw content (one identifier per line, and/or comma-separated) into a
+     * deduplicated list of uppercased candidate identifiers — shape validation of each one still
+     * happens per-row in `prepareInput()` when it's actually added, this only tokenizes the input.
+     *
+     * @return list<string>
+     */
+   public static function splitIdentifiers(string $raw): array {
+       $tokens = preg_split('/[\s,]+/', $raw, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+
+       return array_values(array_unique(array_map('strtoupper', $tokens)));
+   }
+
+    /**
      * @return array<string, mixed>|false
      */
    private function prepareInput(array $input) {

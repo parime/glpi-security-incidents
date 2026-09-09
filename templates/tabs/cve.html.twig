@@ -2,9 +2,10 @@
 <form method="post" action="{{ path('/plugins/securityincidents/front/securityincidentcve.form.php') }}" class="mb-3 d-flex gap-2 align-items-end">
   <input type="hidden" name="_glpi_csrf_token" value="{{ csrf_token() }}">
   <input type="hidden" name="plugin_securityincidents_securityincidents_id" value="{{ item.getID() }}">
-  <div>
-    <label class="form-label">{{ __('CVE identifier', 'securityincidents') }}</label>
-    <input type="text" name="cve_id" class="form-control" placeholder="CVE-2026-12345" required>
+  <div class="flex-fill">
+    <label class="form-label">{{ __('CVE identifier(s)', 'securityincidents') }}</label>
+    <textarea name="cve_ids" class="form-control" rows="2" placeholder="CVE-2026-12345&#10;CVE-2026-67890" required></textarea>
+    <div class="form-hint">{{ __('One per line, or comma-separated — several at once are supported.', 'securityincidents') }}</div>
   </div>
   <button type="submit" name="add" class="btn btn-primary">
     <i class="ti ti-plus"></i> {{ __('Add') }}

@@ -37,7 +37,7 @@ if (is_readable(__DIR__ . '/vendor/autoload.php')) {
 require_once __DIR__ . '/inc/rulesecurityincident.class.php';
 require_once __DIR__ . '/inc/rulesecurityincidentcollection.class.php';
 
-define('PLUGIN_SECURITYINCIDENTS_VERSION', '0.1.3');
+define('PLUGIN_SECURITYINCIDENTS_VERSION', '0.1.4');
 define('PLUGIN_SECURITYINCIDENTS_MIN_GLPI', '11.0.0');
 define('PLUGIN_SECURITYINCIDENTS_MAX_GLPI', '11.99.99');
 define('PLUGIN_SECURITYINCIDENTS_MIN_PHP', '8.2.0');

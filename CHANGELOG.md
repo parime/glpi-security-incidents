@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.4] - 2026-09-09
+
+### Added
+
+- **Bulk CVE association** (#4): the CVE tab's single text input is now a textarea accepting
+  several identifiers at once — one per line and/or comma-separated. Tokenizing is deduplicated
+  and case-normalized up front (`PluginSecurityincidentsSecurityIncidentCve::splitIdentifiers()`);
+  shape validation still happens per identifier when it's actually added, so one malformed line
+  is skipped (with its usual `"X" is not a valid CVE identifier` message) instead of aborting the
+  whole batch or silently accepting it. A summary message reports how many were added.
+
+  Verified live: a batch mixing newlines, commas, a duplicate, and one invalid identifier added
+  exactly the 3 valid unique ones and reported both the correct plural count and the specific
+  invalid identifier — not just that "something" was rejected.
+
 ## [0.1.3] - 2026-09-09
 
 ### Fixed

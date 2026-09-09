@@ -43,6 +43,17 @@ msgstr[1] "CVEs"
 msgid "CVE identifier"
 msgstr "CVE identifier"
 
+msgid "CVE identifier(s)"
+msgstr "CVE identifier(s)"
+
+msgid "One per line, or comma-separated — several at once are supported."
+msgstr "One per line, or comma-separated — several at once are supported."
+
+msgid "%d CVE reference added."
+msgid_plural "%d CVE references added."
+msgstr[0] "%d CVE reference added."
+msgstr[1] "%d CVE references added."
+
 msgid "No CVE reference associated with this incident yet."
 msgstr "No CVE reference associated with this incident yet."
 

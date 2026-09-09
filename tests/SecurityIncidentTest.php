@@ -122,6 +122,25 @@ final class SecurityIncidentTest extends SecurityIncidentsTestCase
    }
 
     /**
+     * `splitIdentifiers()` tokenizes the "Add several at once" textarea (front/
+     * securityincidentcve.form.php's `cve_ids` field) — one identifier per line and/or comma-
+     * separated, deduplicated and uppercased up front. Shape validation of each token still
+     * happens later, per-row, in `prepareInput()` when actually added — not this method's job.
+     */
+   public function testSplitIdentifiersHandlesNewlinesCommasAndDuplicates(): void {
+       $raw = "cve-2026-11111\nCVE-2026-22222, cve-2026-11111\n\nCVE-2026-33333";
+
+       $this->assertSame(
+           ['CVE-2026-11111', 'CVE-2026-22222', 'CVE-2026-33333'],
+           PluginSecurityincidentsSecurityIncidentCve::splitIdentifiers($raw)
+       );
+   }
+
+   public function testSplitIdentifiersOnBlankInputReturnsEmptyArray(): void {
+       $this->assertSame([], PluginSecurityincidentsSecurityIncidentCve::splitIdentifiers("  \n \t "));
+   }
+
+    /**
      * Regression guard: `CommonITILObject::getSolvedStatusArray()`/`getClosedStatusArray()` both
      * default to an empty array ("to be overridden by class") — left unoverridden, any code path
      * that merges them into a SQL `NOT IN (...)` clause (e.g.
