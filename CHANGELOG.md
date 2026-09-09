@@ -9,6 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-09-09
+
+### Fixed
+
+- **Adding a task from an incident's own timeline 404'd.** `front/securityincidenttask.form.php`
+  never existed — every core ITIL type has one (`front/changetask.form.php`,
+  `front/tickettask.form.php`), the timeline's "add a task" action posts to it by convention
+  (`<itemtype-in-lowercase>task.form.php`), and nothing surfaced the gap until a task was actually
+  submitted through the timeline. Added, delegating to GLPI core's shared
+  `front/commonitiltask.form.php` like every core ITIL task controller does. Verified live: task
+  created, persisted with the correct fields, and shows up in the incident's timeline.
+
+### Added
+
+- Test coverage for `GithubVersionChecker` (cache hit / cached-empty-string-means-no-version), and
+  a CI check that desinstalling the plugin leaves no residual columns on `glpi_itilcategories`/
+  `glpi_profiles` either — the existing check only looked at `glpi_entities`, a gap since the
+  `0.1.1` fix added matching columns there too.
+
 ## [0.1.1] - 2026-09-08
 
 ### Fixed
