@@ -9,6 +9,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-09-09
+
+### Fixed
+
+Two more real, live-only bugs found by actually clicking through every tab and satellite feature,
+not by re-reading code — same discipline as `0.1.2`:
+
+- **Adding a cost from the incident's own Cost tab 404'd.** Same root cause as `0.1.2`'s task
+  controller: `front/securityincidentcost.form.php` never existed, and the Cost tab's own "add a
+  cost" subform posts there by convention (`front/changecost.form.php`/`front/ticketcost.form.php`
+  are the core analogues). Added, delegating to core's shared `front/commonitilcost.form.php`.
+- **Linking an asset via the "Item" tab fataled outright** (`RuntimeException: Collection class
+  RulePluginSecurityincidentsSecurityIncidentCollection does not exists for rule type
+  PluginSecurityincidentsSecurityIncident`). Two things were missing, not one:
+  1. `front/securityincident_item.form.php` — same missing-front-controller pattern as above,
+     fixed the same way (delegates to core's `front/commonitilobject_item.form.php`).
+  2. `CommonItilObject_Item::prepareInputForAdd()` unconditionally calls
+     `CommonITILObject::getRuleCollectionClassInstance()`, which requires a
+     `Rule<Type>Collection` class to exist — an eighth previously-undiscovered core convention
+     for this plugin (see the class-naming note below). Added
+     `RulePluginSecurityincidentsSecurityIncident(Collection)`, minimal shape mirroring core's own
+     `RuleChange`/`RuleChangeCollection`, plus the `rule_securityincident` right seeded (and
+     cleaned up on uninstall) so Super-Admin isn't silently denied if a business-rule
+     administration UI is ever built on top of this.
+
+     Getting these two classes to actually load took a second discovery: GLPI's own legacy plugin
+     autoloader (`src/autoload/legacy-autoloader.php`) only resolves a class name starting with
+     `Plugin` — confirmed by reading it. `RulePluginSecurityincidentsSecurityIncident(Collection)`
+     cannot be renamed to fit that convention (core computes the exact expected name itself by
+     string concatenation), so both classes are now `require_once` explicitly from `setup.php`
+     instead of relying on autoloading — the one exception to this plugin's usual "legacy classes
+     just autoload from inc/" convention.
+
+Verified live for both: a cost entry and an asset link were created for real through their actual
+forms and confirmed in the database. Added a PHPUnit regression test for the asset-link crash
+(directly exercises `getRuleCollectionClassInstance()`, unlike the missing-front-controller bugs,
+which only a real HTTP request can catch — see `CONTRIBUTING.md`).
+
 ## [0.1.2] - 2026-09-09
 
 ### Fixed

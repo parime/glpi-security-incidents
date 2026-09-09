@@ -165,7 +165,7 @@ jobs:
             echo "::error::$leftover table(s) residuelle(s) apres desinstallation."
             exit 1
           fi
-          leftover_rights=$(docker exec glpi mariadb -h mariadb -u glpi_user -pglpi_password glpidb -N -e "SELECT COUNT(*) FROM glpi_profilerights WHERE name LIKE 'plugin_securityincidents_%'")
+          leftover_rights=$(docker exec glpi mariadb -h mariadb -u glpi_user -pglpi_password glpidb -N -e "SELECT COUNT(*) FROM glpi_profilerights WHERE name LIKE 'plugin_securityincidents_%' OR name = 'rule_securityincident'")
           if [ "$leftover_rights" != "0" ]; then
             echo "::error::$leftover_rights droit(s) residuel(s) apres desinstallation."
             exit 1

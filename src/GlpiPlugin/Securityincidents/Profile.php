@@ -31,23 +31,31 @@ class Profile
     // than referenced, same reasoning as PluginSecurityincidentsSecurityIncidentCve.
    public const SECURITY_INCIDENT_RIGHT = 'plugin_securityincidents_securityincident';
 
+    // `RulePluginSecurityincidentsSecurityIncidentCollection::$rightname` — a right this plugin
+    // introduces itself (unlike `rule_change`/`rule_ticket`, seeded natively by GLPI core for
+    // every profile), required only to satisfy the core convention that a `Rule<Type>Collection`
+    // class must exist (see that class's own docblock) — no business-rule administration UI
+    // depends on it yet, but leaving the right entirely unseeded would silently deny even
+    // Super-Admin if that UI is ever reached.
+   public const RULE_RIGHT = 'rule_securityincident';
+
    public static function install(\Migration $migration): void {
        global $DB;
 
-       $right = self::SECURITY_INCIDENT_RIGHT;
+      foreach ([self::SECURITY_INCIDENT_RIGHT, self::RULE_RIGHT] as $right) {
+          $existing = [];
+         foreach ($DB->request(['FROM' => \ProfileRight::getTable(), 'WHERE' => ['name' => $right]]) as $row) {
+             $existing[$row['profiles_id']] = true;
+         }
 
-       $existing = [];
-      foreach ($DB->request(['FROM' => \ProfileRight::getTable(), 'WHERE' => ['name' => $right]]) as $row) {
-          $existing[$row['profiles_id']] = true;
-      }
-
-      foreach ($DB->request(['FROM' => \Profile::getTable()]) as $profile) {
-         if (!isset($existing[$profile['id']])) {
-             $DB->insert(\ProfileRight::getTable(), [
-                 'profiles_id' => $profile['id'],
-                 'name' => $right,
-                 'rights' => 0,
-             ]);
+         foreach ($DB->request(['FROM' => \Profile::getTable()]) as $profile) {
+            if (!isset($existing[$profile['id']])) {
+                $DB->insert(\ProfileRight::getTable(), [
+                    'profiles_id' => $profile['id'],
+                    'name' => $right,
+                    'rights' => 0,
+                ]);
+            }
          }
       }
 
@@ -63,12 +71,13 @@ class Profile
        $rows = $DB->request(['FROM' => \Profile::getTable(), 'WHERE' => ['name' => 'Super-Admin']]);
       foreach ($rows as $row) {
           \ProfileRight::updateProfileRights((int) $row['id'], [
-              $right => ALLSTANDARDRIGHT | \PluginSecurityincidentsSecurityIncident::READALL,
+              self::SECURITY_INCIDENT_RIGHT => ALLSTANDARDRIGHT | \PluginSecurityincidentsSecurityIncident::READALL,
+              self::RULE_RIGHT => ALLSTANDARDRIGHT,
           ]);
       }
    }
 
    public static function uninstall(): void {
-       \ProfileRight::deleteProfileRights([self::SECURITY_INCIDENT_RIGHT]);
+       \ProfileRight::deleteProfileRights([self::SECURITY_INCIDENT_RIGHT, self::RULE_RIGHT]);
    }
 }

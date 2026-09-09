@@ -44,6 +44,35 @@ final class SecurityIncidentTest extends SecurityIncidentsTestCase
        $this->assertSame(PluginSecurityincidentsSecurityIncident_Item::class, PluginSecurityincidentsSecurityIncident::getItemLinkClass());
    }
 
+    /**
+     * Regression guard: `CommonItilObject_Item::prepareInputForAdd()` unconditionally calls
+     * `CommonITILObject::getRuleCollectionClassInstance()`, which builds
+     * `'Rule' . static::getType() . 'Collection'` and throws a `RuntimeException` if that class
+     * doesn't exist or isn't loadable — confirmed live, linking an asset via the real "Item" tab
+     * fataled with exactly this until `RulePluginSecurityincidentsSecurityIncident(Collection)`
+     * were added AND explicitly required from setup.php (GLPI's own legacy autoloader only
+     * resolves a class name starting with "Plugin", so simply having these files under inc/ was
+     * not enough on its own — see setup.php's own comment).
+     */
+   public function testAnAssetCanBeLinkedToAnIncident(): void {
+       $entityId = $this->createTestEntity(0, 'PHPUnit Item Link Entity');
+       $incident = new PluginSecurityincidentsSecurityIncident();
+       $incidentId = $incident->add(['name' => 'Test — item link', 'entities_id' => $entityId, 'content' => 'x']);
+
+       $computer = new \Computer();
+       $computerId = $computer->add(['name' => 'PHPUnit test computer', 'entities_id' => $entityId]);
+       $this->assertGreaterThan(0, $computerId);
+
+       $link = new PluginSecurityincidentsSecurityIncident_Item();
+       $linkId = $link->add([
+           'plugin_securityincidents_securityincidents_id' => $incidentId,
+           'itemtype' => 'Computer',
+           'items_id' => $computerId,
+       ]);
+
+       $this->assertGreaterThan(0, $linkId);
+   }
+
    public function testAnalysisFieldsCanBeUpdated(): void {
        $entityId = $this->createTestEntity(0, 'PHPUnit Analysis Entity');
        $incident = new PluginSecurityincidentsSecurityIncident();

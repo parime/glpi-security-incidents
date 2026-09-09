@@ -26,7 +26,18 @@ if (is_readable(__DIR__ . '/vendor/autoload.php')) {
     require_once __DIR__ . '/vendor/autoload.php';
 }
 
-define('PLUGIN_SECURITYINCIDENTS_VERSION', '0.1.2');
+// GLPI's own legacy autoloader (src/autoload/legacy-autoloader.php) only resolves a class whose
+// name starts with "Plugin" — confirmed by reading it, not guessed. `RulePluginSecurityincidents-
+// SecurityIncident(Collection)` cannot be renamed to fit that convention: GLPI core computes the
+// exact expected name itself, by string concatenation
+// (`CommonITILObject::getRuleCollectionClassInstance()`), so the class name is fixed. Required
+// explicitly here instead — confirmed live, `is_a($expected, ..., true)` silently failed to find
+// either class without this, throwing a `RuntimeException` the first time an asset was linked to
+// an incident (the "Item" tab).
+require_once __DIR__ . '/inc/rulesecurityincident.class.php';
+require_once __DIR__ . '/inc/rulesecurityincidentcollection.class.php';
+
+define('PLUGIN_SECURITYINCIDENTS_VERSION', '0.1.3');
 define('PLUGIN_SECURITYINCIDENTS_MIN_GLPI', '11.0.0');
 define('PLUGIN_SECURITYINCIDENTS_MAX_GLPI', '11.99.99');
 define('PLUGIN_SECURITYINCIDENTS_MIN_PHP', '8.2.0');
