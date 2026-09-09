@@ -37,7 +37,7 @@ if (is_readable(__DIR__ . '/vendor/autoload.php')) {
 require_once __DIR__ . '/inc/rulesecurityincident.class.php';
 require_once __DIR__ . '/inc/rulesecurityincidentcollection.class.php';
 
-define('PLUGIN_SECURITYINCIDENTS_VERSION', '0.1.4');
+define('PLUGIN_SECURITYINCIDENTS_VERSION', '0.1.5');
 define('PLUGIN_SECURITYINCIDENTS_MIN_GLPI', '11.0.0');
 define('PLUGIN_SECURITYINCIDENTS_MAX_GLPI', '11.99.99');
 define('PLUGIN_SECURITYINCIDENTS_MIN_PHP', '8.2.0');
@@ -59,6 +59,11 @@ function plugin_init_securityincidents(): void {
     // Wrench icon on Configuration > Plugins — installed-vs-latest-GitHub-release version check,
     // same convention as the sibling plugins (Configuration-glpi-auto, glpi-iso27001-management).
     $PLUGIN_HOOKS[Hooks::CONFIG_PAGE]['securityincidents'] = 'front/config.php';
+
+    // Dashboard cards (total/open incident counts, breakdown by entity/category) — see
+    // plugin_securityincidents_dashboard_cards()'s own docblock in hook.php for the accumulator-
+    // chain gotcha this must respect.
+    $PLUGIN_HOOKS[Hooks::DASHBOARD_CARDS]['securityincidents'] = 'plugin_securityincidents_dashboard_cards';
 }
 
 function plugin_version_securityincidents(): array {

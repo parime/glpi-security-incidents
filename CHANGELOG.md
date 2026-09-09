@@ -9,6 +9,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.5] - 2026-09-09
+
+### Added
+
+- **Dashboard cards** (#2): four cards registered via `Hooks::DASHBOARD_CARDS`, selectable like any
+  other card from the "Ajouter une carte" picker on any GLPI dashboard — total security incidents,
+  currently open incidents, and breakdowns by entity and by category. The first three reuse GLPI
+  core's own generic `Glpi\Dashboard\Provider::bigNumber<Itemtype>`/
+  `multipleNumber<Itemtype>By<FkItemtype>` providers (confirmed by reading `Provider::__callStatic()`
+  — already correctly handle entity restriction and `is_deleted` for any `CommonDBTM`, no custom
+  query needed); only "currently open" needed a small dedicated provider
+  (`GlpiPlugin\Securityincidents\Dashboard\CardProvider::open()`), since it depends on this
+  plugin's own status constants.
+
+  Two real things caught only by testing this against the actual dashboard machinery, not just
+  reading the hook's own documentation:
+  - `Plugin::doHookFunction(Hooks::DASHBOARD_CARDS)` chains every registered plugin's callback as
+    an accumulator, never merging results itself — a callback declared as `array $cards = []`
+    (rather than `?array $cards = null`) silently drops every plugin registered earlier in the
+    chain the moment it runs, a real bug already hit and fixed on the sibling assetsign-glpi
+    plugin. Written defensively from the start here.
+  - Composing the "Number of %s" card label generically (as GLPI core itself does for e.g. asset
+    types) reads ungrammatically in French for a type name starting with a vowel ("Nombre de
+    Incidents" instead of "Nombre d'incidents") — confirmed live in the card picker. Replaced with
+    complete, properly-elided strings in this plugin's own translation domain instead of composing
+    them from a shared core phrase.
+
+  Verified against GLPI's real `Glpi\Dashboard\Grid` class (not a hand-rolled AJAX reproduction,
+  which turned out to have its own request-shape subtleties unrelated to this feature): all four
+  cards are present in the registry, and the "open incidents" provider returns a real count and a
+  working list URL. Regression test added.
+
 ## [0.1.4] - 2026-09-09
 
 ### Added

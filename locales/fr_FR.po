@@ -81,6 +81,19 @@ msgstr "Incident de sécurité résolu"
 msgid "Security incident closed"
 msgstr "Incident de sécurité clôturé"
 
+msgctxt "security incidents"
+msgid "Open"
+msgstr "Ouverts"
+
+msgid "Number of security incidents"
+msgstr "Nombre d'incidents de sécurité"
+
+msgid "Security incidents by entity"
+msgstr "Incidents de sécurité par entité"
+
+msgid "Security incidents by category"
+msgstr "Incidents de sécurité par catégorie"
+
 msgid "Plugin version"
 msgstr "Version du plugin"
 
