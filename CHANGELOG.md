@@ -9,6 +9,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.6] - 2026-09-10
+
+### Fixed
+
+Closes #3 — turns out the Template's own field-configuration screens (Mandatory/Hidden/Readonly/
+Predefined fields) already existed with zero extra code needed: `PluginSecurityincidentsSecurity
+IncidentTemplate` already extends `ITILTemplate` correctly, and GLPI 11's generic dropdown routing
+(`Glpi\Kernel\Listener\RequestListener\LegacyItemtypeRouteListener` — resolves a `CommonDropdown`
+subtype straight from the URL and serves it through `DropdownFormController` with no dedicated
+`front/*.form.php` file required, confirmed by reading it after noticing core itself ships no
+`front/tickettemplate.form.php`/`front/changetemplate.form.php` either) already served the list,
+the new-item form, and all four field-configuration tabs. What was actually missing were three
+real bugs, found only by opening every one of those tabs for real, not by reading `ITILTemplate`'s
+own documentation:
+
+- **The main incidents table had no `plugin_securityincidents_templates_id` column.** Opening the
+  "new template" form fataled with `Unknown column 'plugin_securityincidents_templates_id'`
+  (`glpi_changes.changetemplates_id`/`glpi_tickets.tickettemplates_id` are the native analogues —
+  a column named after the *template class's own table*
+  (`PluginSecurityincidentsSecurityIncidentTemplate::getForeignKeyField()`), not the
+  `strtolower(getType()).'templates_id'` convention used for the `glpi_entities`/
+  `glpi_itilcategories`/`glpi_profiles` columns added in earlier versions — two different core
+  conventions for what looks like the same thing). Added; `CommonITILObject`'s own
+  `prepareInputForAdd()`/`prepareInputForUpdate()` already populate it automatically from the
+  submitted template choice once the column exists, no plugin code needed there.
+- **`CommonITILObject::getItemsTable()` is a hardcoded `switch` listing only
+  `Ticket`/`Change`/`Problem`, with no generic fallback.** Every one of the Mandatory/Hidden/
+  Readonly field tabs calls this (via `ITILTemplate::getAllowedFields()`) to know which asset table
+  a predefined/hidden field can reference, and fataled with "Unknown ITIL type
+  PluginSecurityincidentsSecurityIncident" the moment any of them was opened. Not abstract, so
+  overriding it on `PluginSecurityincidentsSecurityIncident` itself was enough.
+- **The Predefined Fields tab has its own, separate hardcoded copy of that same switch** directly
+  inside `ITILTemplatePredefinedField::getMultiplePredefinedValues()` — overriding (2) alone did
+  not fix this tab, since core doesn't delegate to `getItemsTable()` here. Overridden a second time
+  on `PluginSecurityincidentsSecurityIncidentTemplatePredefinedField` itself, using the same table
+  fix (2) now supplies.
+
+Verified live for all three: created a real template, configured "Description" as a mandatory
+field, confirmed it persists. Also verified (against both this plugin and, for comparison, a real
+GLPI Ticket with a genuinely mandatory field on its own Default template) that GLPI's mandatory-
+field enforcement is a client-side/JavaScript UX feature only — a direct POST bypassing it succeeds
+on core Ticket too, so this plugin already matches core behavior exactly, not a gap to fix.
+Regression tests added for all three fixes.
+
 ## [0.1.5] - 2026-09-09
 
 ### Added

@@ -159,6 +159,21 @@ class PluginSecurityincidentsSecurityIncident extends CommonITILObject
        return PluginSecurityincidentsSecurityIncident_Item::class;
    }
 
+    /**
+     * Required, not optional — same class of surprise as `getRuleCollectionClassInstance()` (see
+     * `RulePluginSecurityincidentsSecurityIncidentCollection`'s own docblock): unlike most
+     * `CommonITILObject` extension points, this one is a hardcoded `switch` in core listing only
+     * `Ticket`/`Change`/`Problem`, with no generic fallback and no way to register a plugin's own
+     * itemtype from outside — confirmed live, opening any of the Template's own field-configuration
+     * tabs (Mandatory/Hidden/Readonly/Predefined) fataled with "Unknown ITIL type
+     * PluginSecurityincidentsSecurityIncident" (`ITILTemplate::getAllowedFields()` calls
+     * `static::getItemsTable()` to know which assets can be referenced in a predefined/hidden
+     * field). Not abstract, so overriding it here is enough — no core patch needed.
+     */
+   public static function getItemsTable() {
+       return PluginSecurityincidentsSecurityIncident_Item::getTable();
+   }
+
    public static function getContentTemplatesParametersClassInstance(): CommonITILObjectParameters {
        return new SecurityIncidentParameters();
    }

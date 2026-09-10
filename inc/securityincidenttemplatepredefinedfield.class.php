@@ -29,4 +29,25 @@ class PluginSecurityincidentsSecurityIncidentTemplatePredefinedField extends ITI
    public static $items_id = 'securityincidenttemplates_id';
 
    public static $itiltype = PluginSecurityincidentsSecurityIncident::class;
+
+    /**
+     * Same "Unknown ITIL type" hardcoded-switch surprise as `PluginSecurityincidentsSecurityIncident
+     * ::getItemsTable()` (see its own docblock) — this time the switch lives directly inside
+     * `ITILTemplatePredefinedField::getMultiplePredefinedValues()` itself (not delegated to
+     * `$itiltype::getItemsTable()`), so overriding the ITIL object's own method isn't enough; this
+     * one has to be overridden here too. Identical to core's own implementation except the
+     * `$itemstable` switch, replaced with the generic `$itil_class::getItemsTable()` call this
+     * plugin's own ITIL class now supports.
+     */
+   public static function getMultiplePredefinedValues(): array {
+       $itil_class = static::$itiltype;
+       $itil_object = getItemForItemtype(static::$itiltype);
+       $itemstable = $itil_class::getItemsTable();
+
+       return [
+           $itil_object->getSearchOptionIDByField('field', 'name', 'glpi_documents'),
+           $itil_object->getSearchOptionIDByField('field', 'items_id', $itemstable),
+           $itil_object->getSearchOptionIDByField('field', 'name', 'glpi_tasktemplates'),
+       ];
+   }
 }

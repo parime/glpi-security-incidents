@@ -102,13 +102,15 @@ final class Installer
                 `solve_delay_stat` int NOT NULL DEFAULT 0,
                 `date_creation` timestamp NULL DEFAULT NULL,
                 `locations_id` int {$keySign} NOT NULL DEFAULT 0,
+                `plugin_securityincidents_templates_id` int {$keySign} NOT NULL DEFAULT 0,
                 PRIMARY KEY (`id`),
                 KEY `entities_id` (`entities_id`),
                 KEY `is_recursive` (`is_recursive`),
                 KEY `is_deleted` (`is_deleted`),
                 KEY `status` (`status`),
                 KEY `itilcategories_id` (`itilcategories_id`),
-                KEY `date` (`date`)
+                KEY `date` (`date`),
+                KEY `plugin_securityincidents_templates_id` (`plugin_securityincidents_templates_id`)
             ) ENGINE=InnoDB DEFAULT CHARSET={$charset} COLLATE={$collation}";
 
          if (!$DB->doQuery($query)) {
@@ -368,6 +370,33 @@ final class Installer
               ['value' => 0, 'after' => 'problemtemplates_id']
           );
           $migration->addKey('glpi_profiles', 'pluginsecurityincidentssecurityincidenttemplates_id');
+      }
+
+       // A ninth core convention this plugin's own object needed, found while actually opening the
+       // Template list/form pages for the first time: GLPI's generic dropdown machinery
+       // (`DropdownFormController`, reached automatically for any `CommonDropdown` subtype with no
+       // dedicated front controller — confirmed by reading
+       // `Glpi\Kernel\Listener\RequestListener\LegacyItemtypeRouteListener`) counts how many main
+       // objects use a given template by querying
+       // `$templateClass::getForeignKeyField()` against the main object's own table — a column
+       // named after the *template class's own table*, not the
+       // `strtolower(getType()).'templates_id'` convention used above for `glpi_entities`/
+       // `glpi_itilcategories`/`glpi_profiles`. Confirmed live: opening the "new template" form
+       // fataled with "Unknown column 'plugin_securityincidents_templates_id'" (derived from
+       // `PluginSecurityincidentsSecurityIncidentTemplate::getTable()`,
+       // `glpi_plugin_securityincidents_templates`, exactly like `changetemplates_id`/
+       // `tickettemplates_id` exist on `glpi_changes`/`glpi_tickets`) — this is also the column
+       // `CommonITILObject`'s own `prepareInputForAdd()`/`prepareInputForUpdate()` already populate
+       // automatically from the submitted template choice, no plugin code needed beyond the column
+       // existing.
+      if (!$DB->fieldExists(self::INCIDENTS_TABLE, 'plugin_securityincidents_templates_id')) {
+          $migration->addField(
+              self::INCIDENTS_TABLE,
+              'plugin_securityincidents_templates_id',
+              'integer',
+              ['value' => 0, 'after' => 'locations_id']
+          );
+          $migration->addKey(self::INCIDENTS_TABLE, 'plugin_securityincidents_templates_id');
       }
 
        Profile::install($migration);
