@@ -61,6 +61,11 @@
     </authors>
     <versions>
         <version>
+            <num>0.1.7</num>
+            <compatibility>=11.0.0</compatibility>
+            <download_url>https://github.com/parime/glpi-security-incidents/releases/download/v0.1.7/glpi-security-incidents-0.1.7.zip</download_url>
+        </version>
+        <version>
             <num>0.1.6</num>
             <compatibility>=11.0.0</compatibility>
             <download_url>https://github.com/parime/glpi-security-incidents/releases/download/v0.1.6/glpi-security-incidents-0.1.6.zip</download_url>
