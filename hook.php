@@ -31,6 +31,35 @@ function plugin_securityincidents_uninstall(): bool {
 }
 
 /**
+ * Renders the Analysis fields (impact/controls/rollback plan) as a native-looking accordion
+ * directly in the incident's own field panel — the same visual location as `Change`'s/`Problem`'s
+ * own "Analysis"/"Plans" accordions — instead of a separate tab requiring an extra click.
+ *
+ * That native accordion itself is not reachable for a plugin's own ITIL type: it's gated by a
+ * hardcoded `item.getType() in ['Problem', 'Change']` check in
+ * `templates/components/itilobject/fields_panel.html.twig`, confirmed by reading it, with no
+ * override point. `Hooks::POST_ITIL_INFO_SECTION` is a real, documented extension point in that
+ * same template (`call_plugin_hook(...POST_ITIL_INFO_SECTION..., {"item": item, "options":
+ * params})`, fired for every itemtype's own form) — this renders nothing unless `$params['item']`
+ * is actually one of this plugin's own incidents.
+ *
+ * The rendered fields are genuine children of the surrounding item form (this hook fires from
+ * inside it), so they save together with the rest of the incident when the main "Save" button is
+ * clicked — no separate submit button, matching `Change`'s own UX exactly.
+ */
+function plugin_securityincidents_post_itil_info_section(array $params): void {
+    $item = $params['item'] ?? null;
+   if (!($item instanceof PluginSecurityincidentsSecurityIncident)) {
+       return;
+   }
+
+    Glpi\Application\View\TemplateRenderer::getInstance()->display('@securityincidents/itil_analysis_section.html.twig', [
+        'item' => $item,
+        'rand' => mt_rand(),
+    ]);
+}
+
+/**
  * `Plugin::doHookFunction(Hooks::DASHBOARD_CARDS)` chains every registered plugin's callback as an
  * accumulator (`$ret = call_user_func($function, $ret)` for each in turn), never merging results
  * itself — confirmed by reading Grid.php, and already the cause of a real bug on the sibling

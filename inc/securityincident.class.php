@@ -227,10 +227,17 @@ class PluginSecurityincidentsSecurityIncident extends CommonITILObject
                            && $this->haveAGroup(CommonITILActor::ASSIGN, $_SESSION['glpigroups'])))));
    }
 
+    /**
+     * No separate "Analysis" tab (there used to be one, `impact_content`/`control_list_content`/
+     * `rollback_plan_content` — removed once `Hooks::POST_ITIL_INFO_SECTION` turned out to let
+     * these same fields render directly in the main field panel instead, exactly where `Change`'s
+     * own native "Analysis" accordion lives — see `plugin_securityincidents_post_itil_info_section()`
+     * in `hook.php`. Keeping both would have shown the same three fields editable in two different
+     * places.
+     */
    public function defineTabs($options = []) {
        $tabs = [];
        $this->addDefaultFormTab($tabs);
-       $this->addStandardTab(self::class, $tabs, $options);
        $this->addStandardTab(PluginSecurityincidentsSecurityIncidentCve::class, $tabs, $options);
        $this->addStandardTab(PluginSecurityincidentsSecurityIncident_Item::class, $tabs, $options);
        $this->addStandardTab(PluginSecurityincidentsSecurityIncidentCost::class, $tabs, $options);
@@ -239,32 +246,6 @@ class PluginSecurityincidentsSecurityIncident extends CommonITILObject
        $this->addStandardTab(Log::class, $tabs, $options);
 
        return $tabs;
-   }
-
-    /**
-     * `getTabNameForItem()`/`displayTabContentForItem()` render this same class's own "Analyse"
-     * tab — `impact_content`/`control_list_content`/`rollback_plan_content` (see project plan:
-     * Change/Problem's native "Analyse" accordion is hardcoded by string comparison in GLPI core's
-     * own `fields_panel.html.twig`, not extensible by a third party).
-     */
-   public function getTabNameForItem(CommonGLPI $item, $withtemplate = 0) {
-      if (!($item instanceof self) || !self::canView()) {
-          return '';
-      }
-
-       return __('Analysis', 'securityincidents');
-   }
-
-   public static function displayTabContentForItem(CommonGLPI $item, $tabnum = 1, $withtemplate = 0) {
-      if (!($item instanceof self)) {
-          return false;
-      }
-
-       Glpi\Application\View\TemplateRenderer::getInstance()->display('@securityincidents/tabs/analysis.html.twig', [
-           'item' => $item,
-       ]);
-
-       return true;
    }
 
    public function cleanDBonPurge() {

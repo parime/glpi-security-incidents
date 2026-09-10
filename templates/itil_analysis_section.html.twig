@@ -1,0 +1,46 @@
+{% import 'components/form/fields_macros.html.twig' as fields %}
+
+{% set analysis_fields = {
+   'impact_content': __('Impact', 'securityincidents'),
+   'control_list_content': __('Controls applied / to apply', 'securityincidents'),
+   'rollback_plan_content': __('Rollback / containment plan', 'securityincidents'),
+} %}
+
+{% set nb_analysis = 0 %}
+{% for analysis_field, label in analysis_fields %}
+   {% if item.fields[analysis_field]|default('')|trim|length > 0 %}
+      {% set nb_analysis = nb_analysis + 1 %}
+   {% endif %}
+{% endfor %}
+
+<section class="accordion-item" aria-label="{{ __('Analysis', 'securityincidents') }}">
+   <div class="accordion-header" id="securityincidents-analysis-heading" title="{{ __('Analysis', 'securityincidents') }}" data-bs-toggle="tooltip">
+      <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#securityincidents-analysis" aria-expanded="true" aria-controls="securityincidents-analysis">
+         <i class="ti ti-eyeglass"></i>
+         <span class="item-title">
+            {{ __('Analysis', 'securityincidents') }}
+         </span>
+         {% if nb_analysis > 0 %}
+            <span class="badge bg-secondary text-secondary-fg ms-2">{{ nb_analysis }}</span>
+         {% endif %}
+      </button>
+   </div>
+   <div id="securityincidents-analysis" class="accordion-collapse collapse show" aria-labelledby="securityincidents-analysis-heading">
+      <div class="accordion-body row m-0 mt-n2">
+         {% for analysis_field, label in analysis_fields %}
+            {{ fields.textareaField(
+               analysis_field,
+               item.fields[analysis_field],
+               label,
+               {
+                  'full_width': true,
+                  'is_horizontal': false,
+                  'enable_richtext': false,
+                  'disabled': not item.canUpdateItem(),
+                  'rand': rand,
+               }
+            ) }}
+         {% endfor %}
+      </div>
+   </div>
+</section>

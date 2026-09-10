@@ -9,14 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Documentation
+## [0.1.7] - 2026-09-10
 
-`README.md`/`README.en.md`, `composer.json` and `securityincidents.xml` still described the v0.1.1
-feature set — no mention of dashboard cards (v0.1.5), bulk CVE association (v0.1.4), or incident
-templates (v0.1.6), three versions after each shipped. `ROADMAP.md` was worse: still listed
-"v0.1.0" as the only released version and all three of the above as future plans. Added
-`USER_GUIDE.md` (none existed at all, unlike the sibling plugins' own `USER_GUIDE.md`/`TUTORIAL.md`)
-and brought the other four back in sync with what v0.1.6 actually ships.
+### Changed
+
+- **The Analysis fields (Impact/Controls applied/Rollback plan) now render directly in the
+  incident's own field panel**, in the same visual spot as `Change`'s/`Problem`'s native
+  "Analysis"/"Plans" accordions — not a separate tab requiring an extra click anymore. Real user
+  feedback: "like for tickets/changes, I want it directly in the right-hand panel."
+
+  That native accordion itself stays unreachable for a plugin's own ITIL type (still hardcoded to
+  `item.getType() in ['Problem', 'Change']` in `fields_panel.html.twig`, confirmed again by
+  re-reading it), but `Hooks::POST_ITIL_INFO_SECTION` turned out to be a real, documented extension
+  point in that exact same template — this plugin just hadn't used it yet. Renders an
+  accordion-styled section using the same Twig macros core uses for its own, gated to this
+  plugin's own itemtype so nothing renders on any other object's page.
+
+  The old, now-redundant "Analysis" tab (`getTabNameForItem()`/`displayTabContentForItem()` on
+  `PluginSecurityincidentsSecurityIncident`, `templates/tabs/analysis.html.twig`) is removed —
+  keeping both would have shown the same three fields editable in two different places at once.
+
+  Verified live: the fields render in the panel (not as a tab anymore), and saving the incident's
+  main form persists them — no separate submit button, matching `Change`'s own UX exactly.
 
 ## [0.1.6] - 2026-09-10
 

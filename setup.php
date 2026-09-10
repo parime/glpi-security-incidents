@@ -37,7 +37,7 @@ if (is_readable(__DIR__ . '/vendor/autoload.php')) {
 require_once __DIR__ . '/inc/rulesecurityincident.class.php';
 require_once __DIR__ . '/inc/rulesecurityincidentcollection.class.php';
 
-define('PLUGIN_SECURITYINCIDENTS_VERSION', '0.1.6');
+define('PLUGIN_SECURITYINCIDENTS_VERSION', '0.1.7');
 define('PLUGIN_SECURITYINCIDENTS_MIN_GLPI', '11.0.0');
 define('PLUGIN_SECURITYINCIDENTS_MAX_GLPI', '11.99.99');
 define('PLUGIN_SECURITYINCIDENTS_MIN_PHP', '8.2.0');
@@ -64,6 +64,11 @@ function plugin_init_securityincidents(): void {
     // plugin_securityincidents_dashboard_cards()'s own docblock in hook.php for the accumulator-
     // chain gotcha this must respect.
     $PLUGIN_HOOKS[Hooks::DASHBOARD_CARDS]['securityincidents'] = 'plugin_securityincidents_dashboard_cards';
+
+    // Renders the Analysis fields directly in the incident's own field panel (same visual spot as
+    // Change's/Problem's native Analysis/Plans accordions) instead of a separate tab — see
+    // plugin_securityincidents_post_itil_info_section()'s own docblock in hook.php.
+    $PLUGIN_HOOKS[Hooks::POST_ITIL_INFO_SECTION]['securityincidents'] = 'plugin_securityincidents_post_itil_info_section';
 }
 
 function plugin_version_securityincidents(): array {
