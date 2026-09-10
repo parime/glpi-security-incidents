@@ -18,9 +18,11 @@
 
                 Un incident de sécurité a un cycle de vie différent d'un ticket de support classique : il
                 nécessite une analyse (impact, mesures appliquées, plan de retour arrière/confinement) et souvent
-                une ou plusieurs références CVE associées. Le plugin ajoute ces deux éléments nativement : un
-                onglet "Analyse" dédié, et une liste de références CVE (format CVE-AAAA-NNNN validé) directement
-                sur la fiche de l'incident.
+                une ou plusieurs références CVE associées. Le plugin ajoute ces éléments nativement : un onglet
+                "Analyse" dédié, une liste de références CVE (format CVE-AAAA-NNNN validé, association possible
+                en masse), des modèles d'incident configurables (champs obligatoires/masqués/en lecture
+                seule/prédéfinis par catégorie), et des cartes de tableau de bord natives (total, ouverts,
+                répartition par entité et par catégorie).
 
                 Ce plugin est délibérément indépendant de tout mécanisme de ticket générique : créer un incident
                 de sécurité ne crée jamais de Ticket sous le capot, et filtrer les tickets par catégorie
@@ -36,8 +38,10 @@
 
                 A security incident has a different lifecycle from a regular support ticket: it needs an
                 analysis (impact, controls applied, rollback/containment plan) and often one or more associated
-                CVE references. The plugin adds both natively: a dedicated "Analysis" tab, and a CVE reference
-                list (validated CVE-YYYY-NNNN format) directly on the incident record.
+                CVE references. The plugin adds these natively: a dedicated "Analysis" tab, a CVE reference list
+                (validated CVE-YYYY-NNNN format, bulk association supported), configurable incident templates
+                (mandatory/hidden/read-only/predefined fields per category), and native dashboard cards (total,
+                open, breakdown by entity and by category).
 
                 This plugin is deliberately independent from any generic ticket mechanism: creating a security
                 incident never creates a Ticket under the hood, and filtering tickets by a "security" category is

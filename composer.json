@@ -1,6 +1,6 @@
 {
     "name": "parime/glpi-security-incidents",
-    "description": "Security incident tracking as a native GLPI ITIL object (Assistance menu), with CVE association.",
+    "description": "Security incident tracking as a native GLPI ITIL object (Assistance menu), with CVE association, configurable templates, and dashboard cards.",
     "type": "glpi-plugin",
     "license": "GPL-3.0-or-later",
     "authors": [

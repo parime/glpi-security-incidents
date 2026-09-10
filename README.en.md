@@ -38,13 +38,20 @@ This is a different, complementary concept from:
 ## Features
 
 - A full `SecurityIncident` ITIL object: status/priority/urgency/impact, requester/observer/assign
-  actors (users, groups, suppliers), tasks, notepad, history.
+  actors (users, groups, suppliers), tasks, costs, asset linkage, notepad, history.
 - A dedicated **Analysis** tab (impact, controls applied, rollback/containment plan).
-- **CVE** reference tracking: associate one or more `CVE-YYYY-NNNN` identifiers with an incident
-  (format validated on input).
+- **CVE** reference tracking, including **bulk association**: paste several `CVE-YYYY-NNNN`
+  identifiers at once (one per line and/or comma-separated), format validated on input,
+  duplicates deduplicated automatically.
+- Configurable **incident templates**: mandatory, hidden, read-only or predefined-value fields,
+  per category — the same screen as a native ticket template.
+- Native **dashboard cards** (total incidents, open incidents, breakdown by entity and by
+  category), available from "Add a card" on any GLPI dashboard.
 - Native notifications (new / update / solved / closed), pre-configured at install.
 - A configuration screen (wrench icon on **Configuration > Plugins**) showing the installed
   version next to the latest version published on GitHub.
+
+See [USER_GUIDE.md](USER_GUIDE.md) for a walkthrough of every screen.
 
 ## Requirements
 

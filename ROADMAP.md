@@ -13,28 +13,40 @@ recherche. Voir [README.md](README.md#pourquoi-un-nouvel-objet-plutôt-quun-type
 le raisonnement complet, y compris la comparaison en conditions réelles avec l'alternative
 "ticket filtré par catégorie".
 
-## 📅 Versions
+## 📅 État actuel — v0.1.6 (2026-09-10)
 
-### v0.1.0 — squelette initial (non publiée sur le marketplace)
+Toutes les fonctionnalités envisagées pour la v0.1 sont livrées et vérifiées en conditions
+réelles :
 
-Objet ITIL `SecurityIncident` complet (acteurs, statuts, tâches, notifications), onglet Analyse,
-suivi de références CVE, écran de configuration avec vérification de version GitHub. Voir
-[CHANGELOG.md](CHANGELOG.md) pour le détail — y compris plusieurs limitations du cœur GLPI 11
-découvertes et documentées au passage (convention de nommage legacy, colonnes de template
-requises sur `glpi_itilcategories`/`glpi_profiles`/`glpi_entities`, classe de coût requise par
-convention).
+- ✅ Objet ITIL `SecurityIncident` complet (acteurs, statuts, tâches, coûts, liaison d'actifs,
+  notifications).
+- ✅ Onglet Analyse (impact, mesures appliquées, plan de retour arrière/confinement).
+- ✅ Suivi de références CVE, y compris **association en masse** (plusieurs identifiants d'un
+  coup, une par ligne et/ou séparées par des virgules) — v0.1.4.
+- ✅ Écran de configuration (icône clé, vérification de version GitHub).
+- ✅ **Cartes de tableau de bord** natives (total, ouverts, par entité, par catégorie),
+  sélectionnables comme n'importe quelle carte GLPI — v0.1.5.
+- ✅ **Interface de configuration des modèles d'incident** (champs obligatoires/masqués/en
+  lecture seule/valeurs prédéfinies, par catégorie) — v0.1.6.
 
-### Prochaines étapes envisagées
+Voir [CHANGELOG.md](CHANGELOG.md) pour le détail de chaque version, y compris les nombreuses
+limitations du cœur GLPI 11 découvertes et documentées au passage (convention de nommage legacy,
+colonnes de template requises sur plusieurs tables du cœur, classe de coût et classe de règle
+métier requises par convention, switch en dur du cœur sur `getItemsTable()`...).
 
-- **Tableau de bord** : widgets natifs (`Glpi\Dashboard`) pour un aperçu du volume d'incidents par
-  statut/catégorie/entité, sur le modèle des cartes déjà fournies par GLPI core pour Ticket.
-- **Modèles d'incident enrichis** : champs obligatoires/masqués par catégorie, actuellement
-  supportés au niveau base de données (`PluginSecurityincidentsSecurityIncidentTemplate` et ses
-  satellites) mais sans interface de configuration dédiée.
-- **Import CVE en masse** : associer plusieurs références CVE d'un coup (CSV ou collage
-  multi-ligne) plutôt qu'une par une.
+## 🔭 Prochaines étapes envisagées
 
-### Explicitement écarté (pour l'instant)
+Rien d'engagé pour l'instant — le périmètre v0.1 couvre le besoin initial. Pistes possibles si un
+besoin réel se confirme :
+
+- **Import CSV pour les CVE** : au-delà du collage multi-ligne actuel (v0.1.4), un import depuis un
+  fichier (sortie d'un scanner de vulnérabilités par exemple).
+- **Widgets de tableau de bord supplémentaires** : évolution du volume d'incidents dans le temps
+  (par mois), sur le modèle des cartes `Provider::getTicketsEvolution()`/`getTicketsStatus()` du
+  cœur — non repris pour l'instant, car spécifique à Ticket et plus coûteux à généraliser que les
+  cartes déjà livrées.
+
+## 🚫 Explicitement écarté (pour l'instant)
 
 - **SLA complet à la Ticket** (`slaAffect()`/`manageSlaLevel()`/`manageOlaLevel()`, escalade cron) :
   `Change` n'a pas non plus de SLA en core — un vrai besoin confirmé sera nécessaire avant
@@ -50,6 +62,7 @@ la suite de vérifications à faire passer avant de proposer un changement.
 
 ## 🔗 Liens utiles
 
+- [USER_GUIDE.md](USER_GUIDE.md) — utilisation au quotidien (technicien et administrateur).
 - [CHANGELOG.md](CHANGELOG.md) — historique détaillé des versions publiées.
 - [Releases GitHub](https://github.com/parime/glpi-security-incidents/releases)
 - [Issues](https://github.com/parime/glpi-security-incidents/issues)

@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Documentation
+
+`README.md`/`README.en.md`, `composer.json` and `securityincidents.xml` still described the v0.1.1
+feature set — no mention of dashboard cards (v0.1.5), bulk CVE association (v0.1.4), or incident
+templates (v0.1.6), three versions after each shipped. `ROADMAP.md` was worse: still listed
+"v0.1.0" as the only released version and all three of the above as future plans. Added
+`USER_GUIDE.md` (none existed at all, unlike the sibling plugins' own `USER_GUIDE.md`/`TUTORIAL.md`)
+and brought the other four back in sync with what v0.1.6 actually ships.
+
 ## [0.1.6] - 2026-09-10
 
 ### Fixed

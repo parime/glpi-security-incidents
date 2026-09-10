@@ -38,14 +38,23 @@ C'est un concept différent et complémentaire de :
 ## Fonctionnalités
 
 - Un objet ITIL `SecurityIncident` complet : statut/priorité/urgence/impact, acteurs
-  demandeur/observateur/assigné (utilisateurs, groupes, prestataires), tâches, notes, historique.
+  demandeur/observateur/assigné (utilisateurs, groupes, prestataires), tâches, coûts, liaison
+  d'actifs, notes, historique.
 - Un onglet **Analyse** dédié (impact, mesures appliquées, plan de retour arrière/confinement).
-- Suivi de références **CVE** : associer un ou plusieurs identifiants `CVE-AAAA-NNNN` à un
-  incident (format validé à la saisie).
+- Suivi de références **CVE**, y compris **en masse** : coller plusieurs identifiants
+  `CVE-AAAA-NNNN` d'un coup (un par ligne et/ou séparés par des virgules), format validé à la
+  saisie, doublons ignorés automatiquement.
+- **Modèles d'incident** configurables : champs obligatoires, masqués, en lecture seule ou à
+  valeur prédéfinie, par catégorie — même écran que pour un modèle de ticket natif.
+- **Cartes de tableau de bord** natives (total d'incidents, incidents ouverts, répartition par
+  entité et par catégorie), disponibles depuis « Ajouter une carte » sur n'importe quel tableau de
+  bord GLPI.
 - Notifications natives (nouveau / mise à jour / résolu / clôturé), préconfigurées à
   l'installation.
 - Écran de configuration (icône clé sur **Configuration > Plugins**) affichant la version
   installée et la dernière version publiée sur GitHub.
+
+Voir [USER_GUIDE.md](USER_GUIDE.md) pour le détail de chaque écran, avec captures de contexte.
 
 ## Prérequis
 
