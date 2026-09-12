@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Documentation
+
+- **Archive notice.** This plugin has been absorbed into
+  [GLPI GRC Manager](https://github.com/parime/glpi-iso27001-management) (v2.0.0) — added an
+  archive notice to `README.md`/`README.en.md` pointing existing and prospective users there
+  before this repository is archived.
+
 ## [0.1.7] - 2026-09-10
 
 ### Changed
