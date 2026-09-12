@@ -1,5 +1,16 @@
 # Security Incidents — incidents de sécurité comme objet ITIL natif de GLPI
 
+> **⚠️ Dépôt archivé.** Ce plugin a été absorbé dans
+> [GLPI GRC Manager](https://github.com/parime/glpi-iso27001-management) (v2.0.0) : l'objet ITIL
+> "Incident de sécurité" (acteurs, workflow, tâches, notifications, suivi CVE, modèles d'incident)
+> décrit ci-dessous y vit désormais tel quel, fusionné avec les champs de conformité ISO 27001
+> (catégorie, sévérité, cause racine/enseignements tirés). Utilisez GLPI GRC Manager pour toute
+> nouvelle installation. **Attention** : la migration automatique intégrée à GLPI GRC Manager ne
+> couvre que son propre ancien registre interne — une installation de **ce plugin-ci** conserve ses
+> données dans ses propres tables (`glpi_plugin_securityincidents_*`), qui ne sont pas reprises
+> automatiquement ; contactez l'auteur si vous avez besoin d'aide pour migrer des données réelles.
+> Ce dépôt n'est plus maintenu.
+
 Créé par **Vincent GUILLOTTE**.
 
 🇫🇷 **Français** | [🇬🇧 English](README.en.md)
